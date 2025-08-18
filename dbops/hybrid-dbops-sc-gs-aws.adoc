@@ -1,0 +1,330 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-gs-aws.html 
+summary: Questa sezione descrive il processo di distribuzione di Cloud Manager e Cloud Volumes ONTAP in AWS. 
+keywords: AWS, cloud volumes ontap, cloud manager, deploy 
+---
+= Introduzione al cloud pubblico AWS
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa sezione descrive il processo di distribuzione di Cloud Manager e Cloud Volumes ONTAP in AWS.
+
+
+
+== Cloud pubblico AWS
+
+
+NOTE: Per semplificare la comprensione, abbiamo creato questo documento basandoci su una distribuzione in AWS.  Tuttavia, il processo è molto simile per Azure e GCP.
+
+
+
+=== 1. Controllo pre-volo
+
+Prima della distribuzione, accertarsi che l'infrastruttura sia pronta per consentire la distribuzione nella fase successiva.  Ciò include quanto segue:
+
+* Account AWS
+* VPC nella regione di tua scelta
+* Subnet con accesso a Internet pubblico
+* Autorizzazioni per aggiungere ruoli IAM al tuo account AWS
+* Una chiave segreta e una chiave di accesso per il tuo utente AWS
+
+
+
+
+=== 2. Passaggi per distribuire Cloud Manager e Cloud Volumes ONTAP in AWS
+
+
+NOTE: Esistono molti metodi per distribuire Cloud Manager e Cloud Volumes ONTAP; questo metodo è il più semplice, ma richiede la maggior parte delle autorizzazioni.  Se questo metodo non è appropriato per il tuo ambiente AWS, consulta il https://docs.netapp.com/us-en/occm/task_creating_connectors_aws.html["Documentazione NetApp Cloud"^] .
+
+
+
+==== Distribuisci il connettore Cloud Manager
+
+. Vai a https://www.netapp.com/bluexp/?utm_campaign=b2d-port-all-na-amer-digi-wepp-brand-amer-1745924643379&utm_source=google&utm_medium=paidsearch&utm_content=nativead&gad_source=1&gad_campaignid=21281798861&gclid=EAIaIQobChMIv_GU0KDJjQMVEXRHAR2A2hJzEAAYASAAEgKAZ_D_BwE["NetApp BlueXP"^] e accedi o registrati.
++
+image:cloud-central-login-page.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Dopo aver effettuato l'accesso, dovresti essere indirizzato a Canvas.
++
+image:cloud-central-canvas-page.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Fare clic su "Aggiungi ambiente di lavoro" e scegliere Cloud Volumes ONTAP in AWS.  Qui puoi anche scegliere se vuoi distribuire un sistema a nodo singolo o una coppia ad alta disponibilità.  Ho scelto di implementare una coppia ad alta disponibilità.
++
+image:cloud-central-add-we-026.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Se non è stato creato alcun connettore, viene visualizzato un pop-up che chiede di crearne uno.
++
+image:cloud-central-add-conn-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Fare clic su Iniziamo, quindi scegliere AWS.
++
+image:cloud-central-add-conn-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Inserisci la tua chiave segreta e la chiave di accesso.  Assicurati che il tuo utente abbia le autorizzazioni corrette descritte in https://mysupport.netapp.com/site/info/cloud-manager-policies["Pagina delle policy NetApp"^] .
++
+image:cloud-central-add-conn-004.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Assegna un nome al connettore e utilizza un ruolo predefinito come descritto nel https://mysupport.netapp.com/site/info/cloud-manager-policies["Pagina delle policy NetApp"^] oppure chiedi a Cloud Manager di creare il ruolo per te.
++
+image:cloud-central-add-conn-005.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Fornire le informazioni di rete necessarie per distribuire il connettore.  Verificare che l'accesso a Internet in uscita sia abilitato:
++
+.. Assegnare al connettore un indirizzo IP pubblico
+.. Fornire al connettore un proxy attraverso cui lavorare
+.. Fornire al connettore un percorso verso Internet pubblico tramite un gateway Internet
++
+image:cloud-central-add-conn-006.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+. Fornire la comunicazione con il connettore tramite SSH, HTTP e HTTPs fornendo un gruppo di sicurezza o creandone uno nuovo.  Ho abilitato l'accesso al connettore solo dal mio indirizzo IP.
++
+image:cloud-central-add-conn-007.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Esaminare le informazioni nella pagina di riepilogo e fare clic su Aggiungi per distribuire il connettore.
++
+image:cloud-central-add-conn-008.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Il connettore ora viene distribuito utilizzando uno stack di formazione cloud.  È possibile monitorarne l'avanzamento tramite Cloud Manager o AWS.
++
+image:cloud-central-add-conn-009.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Una volta completata la distribuzione, verrà visualizzata una pagina di conferma.
++
+image:cloud-central-add-conn-010.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+
+
+==== Distribuisci Cloud Volumes ONTAP
+
+. Seleziona AWS e il tipo di distribuzione in base alle tue esigenze.
++
+image:cloud-central-add-we-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Se non è stato assegnato alcun abbonamento e si desidera acquistare con PAYGO, selezionare Modifica credenziali.
++
+image:cloud-central-add-we-002.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Seleziona Aggiungi abbonamento.
++
+image:cloud-central-add-we-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegli il tipo di contratto che desideri sottoscrivere.  Ho scelto il pagamento a consumo.
++
+image:cloud-central-add-we-004.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Verrai reindirizzato ad AWS; seleziona Continua per iscriverti.
++
+image:cloud-central-add-we-005.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Iscriviti e verrai reindirizzato a NetApp Cloud Central.  Se ti sei già iscritto e non vieni reindirizzato, seleziona il link "Clicca qui".
++
+image:cloud-central-add-we-006.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Verrai reindirizzato a Cloud Central, dove dovrai assegnare un nome al tuo abbonamento e assegnarlo al tuo account Cloud Central.
++
+image:cloud-central-add-we-007.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Se l'operazione riesce, viene visualizzata una pagina con un segno di spunta.  Torna alla scheda Cloud Manager.
++
+image:cloud-central-add-we-008.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. L'abbonamento ora appare in Cloud Central.  Fare clic su Applica per continuare.
++
+image:cloud-central-add-we-009.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Inserisci i dettagli dell'ambiente di lavoro, ad esempio:
++
+.. Nome del cluster
+.. Password del cluster
+.. Tag AWS (facoltativo)
++
+image:cloud-central-add-we-010.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+. Scegli quali servizi aggiuntivi desideri implementare.  Per scoprire di più su questi servizi, visita il https://bluexp.netapp.com/["BlueXP: le moderne operazioni di gestione dei dati semplificate"^] .
++
+image:cloud-central-add-we-011.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegliere se eseguire la distribuzione in più zone di disponibilità (sono necessarie tre subnet, ciascuna in una AZ diversa) o in una singola zona di disponibilità.  Ho scelto più AZ.
++
+image:cloud-central-add-we-012.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare la regione, la VPC e il gruppo di sicurezza in cui verrà distribuito il cluster.  In questa sezione si assegnano anche le zone di disponibilità per nodo (e mediatore), nonché le subnet che occupano.
++
+image:cloud-central-add-we-013.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegliere i metodi di connessione per i nodi e per il mediatore.
++
+image:cloud-central-add-we-014.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+
+TIP: Il mediatore richiede la comunicazione con le API AWS.  Non è necessario un indirizzo IP pubblico, purché le API siano raggiungibili dopo la distribuzione dell'istanza EC2 del mediatore.
+
+. Gli indirizzi IP flottanti vengono utilizzati per consentire l'accesso ai vari indirizzi IP utilizzati da Cloud Volumes ONTAP , inclusi gli IP di gestione dei cluster e di fornitura dei dati.  Devono essere indirizzi che non sono già instradabili all'interno della rete e che vengono aggiunti alle tabelle di routing nel tuo ambiente AWS.  Sono necessari per abilitare indirizzi IP coerenti per una coppia HA durante il failover.  Ulteriori informazioni sugli indirizzi IP flottanti possono essere trovate in https://docs.netapp.com/us-en/occm/reference_networking_aws.html#requirements-for-ha-pairs-in-multiple-azs["Documentazione NetApp Cloud"^] .
++
+image:cloud-central-add-we-015.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare a quali tabelle di routing aggiungere gli indirizzi IP mobili.  Queste tabelle di routing vengono utilizzate dai client per comunicare con Cloud Volumes ONTAP.
++
+image:cloud-central-add-we-016.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegliere se abilitare la crittografia gestita da AWS o AWS KMS per crittografare i dischi radice, di avvio e dati ONTAP .
++
+image:cloud-central-add-we-017.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegli il tuo modello di licenza.  Se non sai quale scegliere, contatta il tuo rappresentante NetApp .
++
+image:cloud-central-add-we-018.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Seleziona la configurazione più adatta al tuo caso d'uso.  Ciò è correlato alle considerazioni sulle dimensioni trattate nella pagina dei prerequisiti.
++
+image:cloud-central-add-we-019.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Facoltativamente, creare un volume.  Questa operazione non è necessaria, perché i passaggi successivi utilizzano SnapMirror, che crea i volumi per noi.
++
+image:cloud-central-add-we-020.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Rivedi le selezioni effettuate e seleziona le caselle per verificare di aver compreso che Cloud Manager distribuisce risorse nel tuo ambiente AWS.  Quando sei pronto, clicca su Vai.
++
+image:cloud-central-add-we-021.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Cloud Volumes ONTAP avvia ora il processo di distribuzione.  Cloud Manager utilizza le API AWS e gli stack di formazione cloud per distribuire Cloud Volumes ONTAP.  Quindi configura il sistema in base alle tue specifiche, fornendoti un sistema pronto all'uso che puoi utilizzare immediatamente.  I tempi di questo processo variano a seconda delle selezioni effettuate.
++
+image:cloud-central-add-we-022.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. È possibile monitorare i progressi accedendo alla Timeline.
++
+image:cloud-central-add-we-023.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. La cronologia funge da controllo di tutte le azioni eseguite in Cloud Manager.  È possibile visualizzare tutte le chiamate API effettuate da Cloud Manager durante la configurazione sia su AWS che sul cluster ONTAP .  Può essere utilizzato efficacemente anche per risolvere eventuali problemi che si possono riscontrare.
++
+image:cloud-central-add-we-024.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Una volta completata la distribuzione, il cluster CVO appare su Canvas, con la capacità corrente.  Il cluster ONTAP nel suo stato attuale è completamente configurato per consentire un'esperienza reale e immediata.
++
+image:cloud-central-add-we-025.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+
+
+==== Configura SnapMirror da locale a cloud
+
+Ora che hai distribuito un sistema ONTAP di origine e un sistema ONTAP di destinazione, puoi replicare i volumi contenenti i dati del database nel cloud.
+
+Per una guida sulle versioni ONTAP compatibili per SnapMirror, vedere https://docs.netapp.com/ontap-9/index.jsp?topic=%2Fcom.netapp.doc.pow-dap%2FGUID-0810D764-4CEA-4683-8280-032433B1886B.html["Matrice di compatibilità SnapMirror"^] .
+
+. Fare clic sul sistema ONTAP di origine (in locale) e trascinarlo nella destinazione, selezionare Replica > Abilita oppure selezionare Replica > Menu > Replica.
++
+image:cloud-central-replication-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+Selezionare Abilita.
+
++
+image:cloud-central-replication-002.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+Oppure Opzioni.
+
++
+image:cloud-central-replication-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+Replicare.
+
++
+image:cloud-central-replication-004.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Se non hai eseguito il trascinamento della selezione, seleziona il cluster di destinazione su cui effettuare la replica.
++
+image:cloud-central-replication-005.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegli il volume che desideri replicare.  Abbiamo replicato i dati e tutti i volumi di registro.
++
+image:cloud-central-replication-006.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare il tipo di disco di destinazione e la politica di suddivisione in livelli.  Per il disaster recovery, consigliamo un SSD come tipo di disco e per mantenere la suddivisione in livelli dei dati.  Il data tiering suddivide i dati speculari in un archivio di oggetti a basso costo e consente di risparmiare denaro sui dischi locali.  Quando si interrompe la relazione o si clona il volume, i dati utilizzano l'archiviazione locale veloce.
++
+image:cloud-central-replication-007.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Seleziona il nome del volume di destinazione: abbiamo scelto `[source_volume_name]_dr` .
++
+image:cloud-central-replication-008.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare la velocità di trasferimento massima per la replica.  Ciò consente di risparmiare larghezza di banda se si dispone di una connessione al cloud con larghezza di banda ridotta, come una VPN.
++
+image:cloud-central-replication-009.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Definire la politica di replicazione.  Abbiamo scelto un Mirror, che prende il set di dati più recente e lo replica nel volume di destinazione.  Potresti anche scegliere una polizza diversa in base alle tue esigenze.
++
+image:cloud-central-replication-010.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare la pianificazione per l'attivazione della replica.  NetApp consiglia di impostare una pianificazione "giornaliera" per il volume di dati e una pianificazione "oraria" per i volumi di log, anche se è possibile modificarla in base alle esigenze.
++
+image:cloud-central-replication-011.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Rivedere le informazioni immesse, fare clic su Vai per attivare il peer del cluster e il peer SVM (se è la prima volta che si esegue una replica tra i due cluster), quindi implementare e inizializzare la relazione SnapMirror .
++
+image:cloud-central-replication-012.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Continuare questo processo per i volumi di dati e i volumi di registro.
+. Per controllare tutte le relazioni, vai alla scheda Replicazione in Cloud Manager.  Qui puoi gestire le tue relazioni e controllarne lo stato.
++
+image:cloud-central-replication-013.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Dopo aver replicato tutti i volumi, si è in uno stato stabile e si è pronti a passare ai flussi di lavoro di disaster recovery e sviluppo/test.
+
+
+
+
+=== 3. Distribuisci l'istanza di elaborazione EC2 per il carico di lavoro del database
+
+AWS ha preconfigurato istanze di elaborazione EC2 per vari carichi di lavoro.  La scelta del tipo di istanza determina il numero di core della CPU, la capacità di memoria, il tipo e la capacità di archiviazione e le prestazioni della rete.  Per i casi d'uso, ad eccezione della partizione del sistema operativo, lo storage principale per eseguire il carico di lavoro del database viene allocato da CVO o dal motore di storage FSx ONTAP .  Pertanto, i fattori principali da considerare sono la scelta dei core della CPU, della memoria e del livello di prestazioni della rete.  I tipi tipici di istanze AWS EC2 sono disponibili qui: https://us-east-2.console.aws.amazon.com/ec2/v2/home?region=us-east-2#InstanceTypes:["Tipo di istanza EC2"] .
+
+
+
+==== Dimensionamento dell'istanza di calcolo
+
+. Selezionare il tipo di istanza corretto in base al carico di lavoro richiesto.  Tra i fattori da considerare rientrano il numero di transazioni commerciali da supportare, il numero di utenti contemporanei, le dimensioni del set di dati e così via.
+. La distribuzione delle istanze EC2 può essere avviata tramite la Dashboard EC2.  Le procedure di distribuzione esatte vanno oltre lo scopo di questa soluzione.  Vedere https://aws.amazon.com/pm/ec2/?trk=ps_a134p000004f2ZGAAY&trkCampaign=acq_paid_search_brand&sc_channel=PS&sc_campaign=acquisition_US&sc_publisher=Google&sc_category=Cloud%20Computing&sc_country=US&sc_geo=NAMER&sc_outcome=acq&sc_detail=%2Bec2%20%2Bcloud&sc_content=EC2%20Cloud%20Compute_bmm&sc_matchtype=b&sc_segment=536455698896&sc_medium=ACQ-P|PS-GO|Brand|Desktop|SU|Cloud%20Computing|EC2|US|EN|Text&s_kwcid=AL!4422!3!536455698896!b!!g!!%2Bec2%20%2Bcloud&ef_id=EAIaIQobChMIua378M-p8wIVToFQBh0wfQhsEAMYASAAEgKTzvD_BwE:G:s&s_kwcid=AL!4422!3!536455698896!b!!g!!%2Bec2%20%2Bcloud["Amazon EC2"] per i dettagli.
+
+
+
+
+==== Configurazione dell'istanza Linux per il carico di lavoro Oracle
+
+Questa sezione contiene ulteriori passaggi di configurazione da eseguire dopo la distribuzione di un'istanza EC2 Linux.
+
+. Aggiungere un'istanza standby di Oracle al server DNS per la risoluzione dei nomi all'interno del dominio di gestione SnapCenter .
+. Aggiungere un ID utente di gestione Linux come credenziali del sistema operativo SnapCenter con autorizzazioni sudo senza password.  Abilitare l'ID con autenticazione tramite password SSH sull'istanza EC2.  (Per impostazione predefinita, l'autenticazione tramite password SSH e sudo senza password sono disattivati nelle istanze EC2.)
+. Configurare l'installazione di Oracle in modo che corrisponda all'installazione di Oracle in locale, ad esempio patch del sistema operativo, versioni e patch di Oracle e così via.
+. I ruoli di automazione del database NetApp Ansible possono essere sfruttati per configurare istanze EC2 per casi d'uso di sviluppo/test del database e di disaster recovery.  Il codice di automazione può essere scaricato dal sito pubblico GitHub NetApp : https://github.com/NetApp-Automation/na_oracle19c_deploy["Distribuzione automatizzata di Oracle 19c"^] .  L'obiettivo è installare e configurare uno stack software di database su un'istanza EC2 in modo che corrisponda alle configurazioni del sistema operativo e del database locali.
+
+
+
+
+==== Configurazione dell'istanza di Windows per il carico di lavoro di SQL Server
+
+In questa sezione sono elencati i passaggi di configurazione aggiuntivi successivi alla distribuzione iniziale di un'istanza EC2 Windows.
+
+. Recupera la password dell'amministratore di Windows per accedere a un'istanza tramite RDP.
+. Disattivare il firewall di Windows, unire l'host al dominio Windows SnapCenter e aggiungere l'istanza al server DNS per la risoluzione dei nomi.
+. Fornire un volume di registro SnapCenter per archiviare i file di registro di SQL Server.
+. Configurare iSCSI sull'host Windows per montare il volume e formattare l'unità disco.
+. Anche in questo caso, molte delle attività precedenti possono essere automatizzate con la soluzione di automazione NetApp per SQL Server.  Consulta il sito GitHub pubblico di NetApp Automation per i ruoli e le soluzioni appena pubblicati: https://github.com/NetApp-Automation["Automazione NetApp"^] .
+

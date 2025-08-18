@@ -1,0 +1,31 @@
+---
+sidebar: sidebar 
+permalink: oracle/azure-ora-nfile-architecture.html 
+summary: 'Questa sezione illustra un"architettura di soluzione di distribuzione e protezione dei dati di database Oracle con macchina virtuale di Azure e archiviazione Azure NetApp Files .' 
+keywords: architecture, database, Oracle, Azure, Azure NetApp Files 
+---
+= Architettura della soluzione
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Il seguente diagramma di architettura illustra una distribuzione di database Oracle ad alta disponibilità su istanze di macchine virtuali di Azure e sull'archiviazione Azure NetApp Files .
+
+All'interno dell'ambiente, l'istanza di elaborazione Oracle viene distribuita tramite una console VM dei servizi Azure.  Sono disponibili più tipi di istanze di Azure dalla console.  NetApp consiglia di distribuire un'istanza di Azure VM orientata al database che soddisfi il carico di lavoro previsto.
+
+L'archiviazione del database Oracle, invece, viene distribuita con il servizio Azure NetApp Files disponibile dalla console di Azure.  Successivamente, i volumi binari, di dati o di registro di Oracle vengono presentati e montati su un host Linux dell'istanza di Azure VM.
+
+image:db-ora-azure-anf-architecture.png["Questa immagine illustra la relazione tra il sito primario, il sito di standby e il peering vNet di ciascuno di questi siti.  In questo modo si formano quattro reti virtuali separate."]
+
+Per molti aspetti, l'implementazione di Azure NetApp Files nel cloud di Azure è molto simile a un'architettura di archiviazione dati ONTAP locale con numerose ridondanze integrate, come RAID e doppi controller.  Per il ripristino di emergenza, è possibile configurare un sito di standby in regioni diverse e sincronizzare il database con il sito primario utilizzando la replica a livello di applicazione (ad esempio, Oracle Data Guard).
+
+Nella nostra convalida dei test per la distribuzione del database Oracle e la protezione dei dati, il database Oracle viene distribuito su una singola macchina virtuale di Azure, come illustrato nel diagramma seguente:
+
+image:db-ora-azure-anf-architecture2.png["Questa immagine illustra l'organizzazione di una singola macchina virtuale di Azure con peering vNet per creare due reti virtuali separate."]
+
+L'ambiente Azure Oracle può essere gestito con un nodo controller Ansible per l'automazione utilizzando i kit di strumenti forniti da NetApp per la distribuzione, il backup, il ripristino e la migrazione del database.  Tutti gli aggiornamenti al kernel del sistema operativo dell'istanza Oracle Azure VM o le patch Oracle possono essere eseguiti in parallelo per mantenere sincronizzati il sistema primario e quello di standby.  Infatti, i toolkit iniziali possono essere facilmente ampliati per eseguire le attività quotidiane di Oracle, se necessario.  Se hai bisogno di aiuto per configurare un controller Ansible CLI, vedilink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automazione delle soluzioni NetApp ^"^] per iniziare.

@@ -1,0 +1,157 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-snapcenter-devtest.html 
+summary: 'L"agilità del cloud pubblico, il time-to-value e il risparmio sui costi sono tutte proposte di valore significative per le aziende che adottano il cloud pubblico per lo sviluppo e il testing delle applicazioni di database.  Non esiste strumento migliore di SnapCenter per trasformare tutto questo in realtà in poco tempo.  SnapCenter non solo può proteggere il tuo database di produzione in locale, ma può anche clonarne rapidamente una copia per lo sviluppo di applicazioni o per il test del codice nel cloud pubblico, consumando pochissimo spazio di archiviazione aggiuntivo.  Di seguito sono riportati i dettagli dei processi passo passo che utilizzano lo strumento.' 
+keywords: hybrid cloud, database, solutions, dev/test, workflow 
+---
+= Flusso di lavoro per lo sviluppo/test che si espande nel cloud
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+L'agilità del cloud pubblico, il time-to-value e il risparmio sui costi sono tutte proposte di valore significative per le aziende che adottano il cloud pubblico per lo sviluppo e il test delle applicazioni di database.  Non esiste strumento migliore di SnapCenter per rendere tutto questo realtà.  SnapCenter non solo può proteggere il tuo database di produzione in locale, ma può anche clonarne rapidamente una copia per lo sviluppo di applicazioni o per il test del codice nel cloud pubblico, consumando pochissimo spazio di archiviazione aggiuntivo.  Di seguito sono riportati i dettagli dei processi passo dopo passo per utilizzare questo strumento.
+
+
+
+== Clona un database Oracle per sviluppo/test da un backup snapshot replicato
+
+. Accedi a SnapCenter con un ID utente di gestione del database per Oracle.  Passare alla scheda Risorse, che mostra i database Oracle protetti da SnapCenter.
++
+image:snapctr-ora-clone-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Fare clic sul nome del database locale desiderato per la topologia di backup e la vista dettagliata.  Se è abilitata una posizione replicata secondaria, vengono mostrati i backup mirror collegati.
++
+image:snapctr-ora-clone-002.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. È possibile passare alla visualizzazione dei backup speculari facendo clic su Backup speculari.  Vengono quindi visualizzati i backup dello specchio secondario.
++
+image:snapctr-ora-clone-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare una copia di backup del database secondario con mirroring da clonare e determinare un punto di ripristino in base all'ora e al numero di modifica del sistema oppure in base all'SCN.  In genere, il punto di ripristino dovrebbe essere successivo al momento del backup completo del database o all'SCN da clonare.  Dopo aver deciso un punto di ripristino, è necessario montare il backup del file di registro richiesto per il ripristino.  Il backup del file di registro deve essere montato sul server DB di destinazione in cui verrà ospitato il database clone.
++
+image:snapctr-ora-clone-004.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+image:snapctr-ora-clone-005.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+
+NOTE: Se è abilitata la potatura del registro e il punto di ripristino viene esteso oltre l'ultima potatura del registro, potrebbe essere necessario montare più backup del registro di archivio.
+
+. Evidenziare la copia di backup completa del database da clonare, quindi fare clic sul pulsante Clona per avviare il flusso di lavoro di clonazione del database.
++
+image:snapctr-ora-clone-006.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegliere un SID DB clone appropriato per un database contenitore completo o un clone CDB.
++
+image:snapctr-ora-clone-007.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionando l'host clone di destinazione nel cloud, il flusso di lavoro di clonazione creerà le directory dei file di dati, dei file di controllo e dei log redo.
++
+image:snapctr-ora-clone-008.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Il nome della credenziale Nessuno viene utilizzato per l'autenticazione basata sul sistema operativo, il che rende irrilevante la porta del database.  Inserire i dati corretti per Oracle Home, Oracle OS User e Oracle OS Group, come configurato nel server DB clone di destinazione.
++
+image:snapctr-ora-clone-009.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Specificare gli script da eseguire prima dell'operazione di clonazione.  Ancora più importante, il parametro dell'istanza del database può essere modificato o definito qui.
++
+image:snapctr-ora-clone-010.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Specificare il punto di ripristino in base alla data e all'ora oppure tramite SCN.  Finché Annulla ripristina il database fino ai registri di archivio disponibili.  Specificare la posizione del registro di archivio esterno dall'host di destinazione in cui è montato il volume del registro di archivio.  Se il proprietario Oracle del server di destinazione è diverso dal server di produzione locale, verificare che la directory del registro di archivio sia leggibile dal proprietario Oracle del server di destinazione.
++
+image:snapctr-ora-clone-011.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+image:snapctr-ora-clone-012.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Se lo si desidera, configurare il server SMTP per la notifica via e-mail.
++
+image:snapctr-ora-clone-013.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Riepilogo del clone.
++
+image:snapctr-ora-clone-014.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Dopo la clonazione è necessario convalidare per assicurarsi che il database clonato sia operativo.  Alcune attività aggiuntive, come l'avvio del listener o la disattivazione della modalità di archiviazione del log del DB, possono essere eseguite sul database di sviluppo/test.
++
+image:snapctr-ora-clone-015.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+
+
+== Clona un database SQL per sviluppo/test da un backup Snapshot replicato
+
+. Accedi a SnapCenter con un ID utente di gestione del database per SQL Server.  Passare alla scheda Risorse, che mostra i database utente di SQL Server protetti da SnapCenter e un'istanza SQL di standby di destinazione nel cloud pubblico.
++
+image:snapctr-sql-clone-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Fare clic sul nome del database utente SQL Server locale desiderato per la topologia dei backup e la visualizzazione dettagliata.  Se è abilitata una posizione replicata secondaria, vengono mostrati i backup mirror collegati.
++
+image:snapctr-sql-clone-002.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Passare alla visualizzazione Backup speculari facendo clic su Backup speculari.  Vengono quindi visualizzati i backup mirror secondari.  Poiché SnapCenter esegue il backup del registro delle transazioni di SQL Server su un'unità dedicata per il ripristino, qui vengono visualizzati solo i backup completi del database.
++
+image:snapctr-sql-clone-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Scegli una copia di backup, quindi fai clic sul pulsante Clona per avviare il flusso di lavoro Clona da backup.
++
+image:snapctr-sql-clone-004-a.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
++
+image:snapctr-sql-clone-004.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Selezionare un server cloud come server clone di destinazione, il nome dell'istanza clone e il nome del database clone.  Scegliere un punto di montaggio assegnato automaticamente o un percorso di punto di montaggio definito dall'utente.
++
+image:snapctr-sql-clone-005.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Determinare un punto di ripristino in base all'ora di backup del registro o in base a una data e un'ora specifiche.
++
+image:snapctr-sql-clone-006.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Specificare gli script facoltativi da eseguire prima e dopo l'operazione di clonazione.
++
+image:snapctr-sql-clone-007.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Configurare un server SMTP se si desidera la notifica via e-mail.
++
+image:snapctr-sql-clone-008.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Riepilogo del clone.
++
+image:snapctr-sql-clone-009.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+. Monitorare lo stato del processo e verificare che il database utente previsto sia stato collegato a un'istanza SQL di destinazione nel server clone cloud.
++
+image:snapctr-sql-clone-010.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+
+
+== Configurazione post-clone
+
+. Un database di produzione Oracle in locale viene solitamente eseguito in modalità di archiviazione dei log.  Questa modalità non è necessaria per un database di sviluppo o di test.  Per disattivare la modalità di archiviazione dei log, accedere al database Oracle come sysdba, eseguire un comando di modifica della modalità di log e avviare il database per l'accesso.
+. Configurare un listener Oracle oppure registrare il DB appena clonato con un listener esistente per l'accesso utente.
+. Per SQL Server, modificare la modalità di registrazione da Completa a Semplice in modo che il file di registro di sviluppo/test di SQL Server possa essere facilmente ridotto quando riempie il volume di registro.
+
+
+
+
+== Aggiorna il database clone
+
+. Eliminare i database clonati e ripulire l'ambiente del server DB cloud.  Quindi seguire le procedure precedenti per clonare un nuovo DB con dati aggiornati.  Per clonare un nuovo database bastano pochi minuti.
+. Arrestare il database clone, eseguire un comando di aggiornamento clone tramite la CLI.  Per maggiori dettagli, consultare la seguente documentazione SnapCenter :link:https://docs.netapp.com/us-en/snapcenter/protect-sco/task_refresh_a_clone.html["Aggiorna un clone"^] .
+
+
+
+
+== Dove rivolgersi per chiedere aiuto?
+
+Se hai bisogno di aiuto con questa soluzione e casi d'uso, unisciti alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.

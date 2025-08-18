@@ -1,0 +1,185 @@
+---
+sidebar: sidebar 
+permalink: automation/getting-started-requirements.html 
+keywords: Linux, RHEL Oracle19c, NFS, ONTAP 
+summary: Questa pagina descrive il metodo automatizzato per distribuire Oracle19c sullo storage NetApp ONTAP . 
+---
+= Iniziare
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa soluzione è stata progettata per essere eseguita in un ambiente AWX/Tower o tramite CLI su un host di controllo Ansible.
+
+
+
+== AWX/Torre
+
+Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario della gestione del cluster ONTAP e del server Oracle (IP e nomi host), nella creazione delle credenziali, nella configurazione di un progetto che estrae il codice Ansible da NetApp Automation Github e nel modello di lavoro che avvia l'automazione.
+
+. Compila le variabili specifiche del tuo ambiente, quindi copiale e incollale nei campi Extra Vars nel tuo modello di lavoro.
+. Dopo aver aggiunto le variabili extra al modello di lavoro, è possibile avviare l'automazione.
+. Il modello di lavoro viene eseguito in tre fasi specificando i tag per ontap_config, linux_config e oracle_config.
+
+
+
+
+== CLI tramite l'host di controllo Ansible
+
+. Per configurare l'host Linux in modo che possa essere utilizzato come host di controllo Ansiblelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["clicca qui per istruzioni dettagliate"^]
+. Dopo aver configurato l'host di controllo Ansible, è possibile clonare tramite git il repository Ansible Automation.
+. Modificare il file hosts con gli IP e/o i nomi host della gestione del cluster ONTAP e degli IP di gestione del server Oracle.
+. Compila le variabili specifiche per il tuo ambiente e copiale e incollale nel `vars.yml` file.
+. Ogni host Oracle ha un file variabile identificato dal suo nome host che contiene variabili specifiche dell'host.
+. Dopo aver completato tutti i file variabili, è possibile eseguire il playbook in tre fasi specificando i tag per `ontap_config` , `linux_config` , E `oracle_config` .
+
+
+
+
+== Requisiti
+
+[cols="3, 9"]
+|===
+| Ambiente | Requisiti 
+
+
+.4+| *Ambiente Ansible* | Host AWX/Tower o Linux per essere l'host di controllo Ansible 
+
+
+| Ansible v.2.10 e versioni successive 
+
+
+| Python 3 
+
+
+| Librerie Python - netapp-lib - xmltodict - jmespath 
+
+
+.3+| * ONTAP* | ONTAP versione 9.3 - 9.7 
+
+
+| Due aggregati di dati 
+
+
+| NFS vlan e ifgrp creati 
+
+
+.5+| *Server Oracle* | RHEL 7/8 
+
+
+| Oracle Linux 7/8 
+
+
+| Interfacce di rete per NFS, pubbliche e di gestione facoltativa 
+
+
+| File di installazione di Oracle sui server Oracle 
+|===
+
+
+== Dettagli di automazione
+
+Questa distribuzione automatizzata è progettata con un singolo playbook Ansible composto da tre ruoli separati.  I ruoli sono per le configurazioni ONTAP, Linux e Oracle.  La tabella seguente descrive quali attività vengono automatizzate.
+
+[cols="4, 9"]
+|===
+| Ruolo | Compiti 
+
+
+.5+| *ontap_config* | Pre-controllo dell'ambiente ONTAP 
+
+
+| Creazione di SVM basato su NFS per Oracle 
+
+
+| Creazione di una politica di esportazione 
+
+
+| Creazione di volumi per Oracle 
+
+
+| Creazione di NFS LIF 
+
+
+.9+| *linux_config* | Crea punti di montaggio e monta volumi NFS 
+
+
+| Verifica i mount NFS 
+
+
+| Configurazione specifica del sistema operativo 
+
+
+| Creare directory Oracle 
+
+
+| Configura hugepages 
+
+
+| Disabilitare SELinux e il demone firewall 
+
+
+| Abilita e avvia il servizio chronyd 
+
+
+| aumentare il limite massimo del descrittore di file 
+
+
+| Crea il file di sessione pam.d 
+
+
+.8+| *configurazione_oracle* | Installazione del software Oracle 
+
+
+| Crea un listener Oracle 
+
+
+| Creare database Oracle 
+
+
+| Configurazione dell'ambiente Oracle 
+
+
+| Salva lo stato del PDB 
+
+
+| Abilita la modalità di archiviazione delle istanze 
+
+
+| Abilita client DNFS 
+
+
+| Abilita l'avvio e l'arresto automatici del database tra i riavvii del sistema operativo 
+|===
+
+
+== Parametri predefiniti
+
+Per semplificare l'automazione, abbiamo preimpostato molti parametri di distribuzione Oracle richiesti con valori predefiniti.  In genere, per la maggior parte delle distribuzioni non è necessario modificare i parametri predefiniti.  Un utente più esperto può apportare modifiche ai parametri predefiniti con cautela.  I parametri predefiniti si trovano in ogni cartella dei ruoli nella directory defaults.
+
+
+
+== Istruzioni per la distribuzione
+
+Prima di iniziare, scaricare i seguenti file di installazione e patch di Oracle e inserirli nella cartella `/tmp/archive` directory con accesso in lettura, scrittura ed esecuzione per tutti gli utenti su ciascun server DB da distribuire.  Le attività di automazione cercano i file di installazione denominati in quella directory specifica per l'installazione e la configurazione di Oracle.
+
+[listing]
+----
+LINUX.X64_193000_db_home.zip -- 19.3 base installer
+p31281355_190000_Linux-x86-64.zip -- 19.8 RU patch
+p6880880_190000_Linux-x86-64.zip -- opatch version 12.2.0.1.23
+----
+
+
+== Licenza
+
+Dovresti leggere le informazioni sulla licenza come indicato nel repository Github.  Accedendo, scaricando, installando o utilizzando il contenuto di questo repository, accetti i termini della licenza stabilitilink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["Qui"^] .
+
+Si noti che esistono alcune restrizioni relative alla produzione e/o alla condivisione di lavori derivati dai contenuti di questo repository.  Si prega di assicurarsi di leggere i termini dellink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["Licenza"^] prima di utilizzare il contenuto.  Se non accetti tutti i termini, non accedere, scaricare o utilizzare i contenuti di questo repository.
+
+Quando sei pronto, cliccalink:awx-automation.html["qui per le procedure dettagliate di distribuzione AWX/Tower"] Olink:cli-automation.html["qui per la distribuzione CLI"] .

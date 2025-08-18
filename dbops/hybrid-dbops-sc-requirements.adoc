@@ -1,0 +1,78 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-requirements.html 
+summary: Questa soluzione è progettata in un ambiente cloud ibrido per supportare database di produzione on-premise che possono essere distribuiti su tutti i cloud pubblici più diffusi per operazioni di sviluppo/test e disaster recovery. 
+keywords: requirements, virtualized, bare metal, versions, automation 
+---
+= Requisiti SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa soluzione è progettata in un ambiente cloud ibrido per supportare database di produzione on-premise che possono essere distribuiti su tutti i cloud pubblici più diffusi per operazioni di sviluppo/test e disaster recovery.
+
+Questa soluzione supporta tutti i database attualmente supportati da SnapCenter, anche se qui vengono illustrati solo i database Oracle e SQL Server.  Questa soluzione è convalidata con carichi di lavoro di database virtualizzati, sebbene siano supportati anche carichi di lavoro bare-metal.
+
+Supponiamo che i server di database di produzione siano ospitati in locale con volumi di database presentati agli host di database da un cluster di archiviazione ONTAP .  Il SnapCenter software viene installato in sede per il backup del database e la replica dei dati sul cloud.  Un controller Ansible è consigliato ma non obbligatorio per l'automazione della distribuzione del database o per la sincronizzazione della configurazione del kernel del sistema operativo e del database con un'istanza DR di standby o istanze di sviluppo/test nel cloud pubblico.
+
+
+
+== Requisiti
+
+[cols="3, 9"]
+|===
+| Ambiente | Requisiti 
+
+
+.7+| *In sede* | Tutti i database e le versioni supportati da SnapCenter 
+
+
+| SnapCenter v4.4 o superiore 
+
+
+| Ansible v2.09 o superiore 
+
+
+| Cluster ONTAP 9.x 
+
+
+| Intercluster LIF configurati 
+
+
+| Connettività da locale a un VPC cloud (VPN, interconnessione e così via) 
+
+
+| Porte di rete aperte - ssh 22 - tcp 8145, 8146, 10000, 11104, 11105 
+
+
+.3+| *Cloud - AWS* | https://docs.netapp.com/us-en/occm/task_creating_connectors_aws.html["Connettore Cloud Manager"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_aws.html["Cloud Volumes ONTAP"^] 
+
+
+| Abbinamento delle istanze DB OS EC2 a quelle locali 
+
+
+.3+| *Cloud - Azzurro* | https://docs.netapp.com/us-en/occm/task_creating_connectors_azure.html["Connettore Cloud Manager"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_azure.html["Cloud Volumes ONTAP"^] 
+
+
+| Abbinamento delle macchine virtuali di Azure del sistema operativo DB a quelle locali 
+
+
+.3+| *Cloud - GCP* | https://docs.netapp.com/us-en/occm/task_creating_connectors_gcp.html["Connettore Cloud Manager"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_gcp.html["Cloud Volumes ONTAP"^] 
+
+
+| Abbinamento delle istanze di Google Compute Engine del sistema operativo DB a quelle locali 
+|===

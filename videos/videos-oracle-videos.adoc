@@ -1,0 +1,62 @@
+---
+sidebar: sidebar 
+permalink: videos/videos-oracle-videos.html 
+summary: Serie di video e demo che illustrano le funzionalità di molte soluzioni NetApp 
+keywords: netapp, solutions, videos, demos 
+---
+= Guarda video e demo sulle soluzioni di database per Oracle con NetApp
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Esplora la completa libreria video di NetApp con soluzioni di database per Oracle con NetApp.  Ogni raccolta mette in evidenza soluzioni pratiche, best practice di integrazione e gestione moderna dei database per i carichi di lavoro aziendali.
+
+
+
+== Distribuzione e automazione
+
+.Distribuzione Oracle semplificata e automatizzata su Azure NetApp Files con NFS
+video::d1c859b6-e45a-44c7-8361-b10f012fc89b[panopto,width=360]
+.Distribuzione Oracle semplificata e automatizzata su Amazon FSx ONTAP con iSCSI
+video::81e389a0-d9b8-495c-883b-b0d701710847[panopto,width=360]
+.Distribuzione Oracle semplificata e automatizzata su NetApp ASA con iSCSI
+video::79095731-6b02-41d5-9fa1-b0c00100d055[panopto,width=360]
+.Clonazione automatizzata di Oracle DB da DataGuard standby su GCNV con ASM
+video::74062c18-b120-45b7-9bf9-b2db00f73675[panopto,width=360]
+.Distribuzione automatizzata di Oracle 19c RAC su FlexPod con Ansible
+video::VcQMJIRzhoY[youtube,width=360]
+
+
+== Backup, ripristino e clonazione
+
+.Backup, ripristino e clonazione del database Oracle su ANF con SnapCenter
+video::960fb370-c6e0-4406-b6d5-b110014130e8[panopto,width=360]
+.Parte 4a - Clonazione del database per sviluppo/test con interfaccia utente SnapCenter da copia standby replicata
+video::2f731d7c-0873-4a4d-8491-b01200f90a82[panopto,width=360]
+.Parte 4b - Backup, ripristino e clonazione del database con l'interfaccia utente SnapCenter
+video::97790d62-ff19-40e0-9784-b01200f920ed[panopto,width=360]
+.Parte 4c - Backup e ripristino del database con BlueXP SaaS Apps backup e ripristino
+video::4b0fd212-7641-46b8-9e55-b01200f9383a[panopto,width=360]
+.Clone di database Oracle multi-tenant collegabile tramite snapshot di archiviazione
+video::krzMWjrrMb0[youtube,width=360]
+
+
+== Modernizzazione e migrazione
+
+.Parte 1 - Modernizzazione di Oracle con cloud ibrido in AWS e FSx ONTAP
+video::b1a7bb05-caea-44a0-bd9a-b01200f372e9[panopto,width=360]
+.Parte 2a - Migrazione del database da locale ad AWS utilizzando la rilocazione PDB automatizzata con la massima disponibilità
+video::bb088a3e-bbfb-4927-bf44-b01200f38b17[panopto,width=360]
+.Parte 2b - Migrazione del database da locale ad AWS utilizzando la console BlueXP tramite SnapMirror
+video::c0df32f8-d6d3-4b79-b0bd-b01200f3a2e8[panopto,width=360]
+
+
+== Alta disponibilità, ripristino di emergenza e replicazione
+
+.Parte 3 - Configurazione automatizzata della replica HA/DR del database, failover, risincronizzazione
+video::5fd03759-a691-4007-9748-b01200f3b79c[panopto,width=360]

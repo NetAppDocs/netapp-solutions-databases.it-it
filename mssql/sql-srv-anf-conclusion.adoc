@@ -1,0 +1,32 @@
+---
+sidebar: sidebar 
+permalink: mssql/sql-srv-anf-conclusion.html 
+keywords: takeaways, hybrid-cloud 
+summary: 'Che si punti a un cloud all-cloud o ibrido con database estesi, Azure NetApp Files offre eccellenti opzioni per distribuire e gestire i carichi di lavoro del database, riducendo al contempo il costo totale di proprietà (TCO) rendendo i requisiti dei dati uniformi al livello applicativo.' 
+---
+= Conclusione
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Che si punti a un cloud all-cloud o ibrido con database estesi, Azure NetApp Files offre eccellenti opzioni per distribuire e gestire i carichi di lavoro del database, riducendo al contempo il costo totale di proprietà (TCO) rendendo i requisiti dei dati uniformi al livello applicativo.
+
+Questo documento contiene raccomandazioni per la pianificazione, la progettazione, l'ottimizzazione e il ridimensionamento delle distribuzioni di Microsoft SQL Server con Azure NetApp Files, che possono variare notevolmente tra le implementazioni.  La soluzione giusta dipende sia dai dettagli tecnici dell'implementazione sia dai requisiti aziendali che guidano il progetto.
+
+
+
+== Da asporto
+
+I punti chiave di questo documento includono:
+
+* Ora è possibile utilizzare Azure NetApp Files per ospitare il database e il witness di condivisione file per il cluster SQL Server.
+* È possibile aumentare i tempi di risposta delle applicazioni e garantire una disponibilità del 99,9999% per consentire l'accesso ai dati di SQL Server quando e dove necessario.
+* È possibile semplificare la complessità complessiva della distribuzione di SQL Server e la gestione continua, ad esempio lo striping RAID, con un ridimensionamento semplice e immediato.
+* Puoi contare su funzionalità operative intelligenti che ti aiutano a distribuire database SQL Server in pochi minuti e ad accelerare i cicli di sviluppo.
+* Se la destinazione è Azure Cloud, Azure NetApp Files è la soluzione di archiviazione ideale per una distribuzione ottimizzata.
+

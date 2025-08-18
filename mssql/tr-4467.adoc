@@ -1,0 +1,21 @@
+---
+sidebar: sidebar 
+permalink: mssql/tr-4467.html 
+keywords:  
+summary:  
+---
+= TR-4467: SAP con Microsoft SQL Server su Windows - Procedure consigliate con NetApp Clustered Data ONTAP e SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Marco Schoen, NetApp
+
+[role="lead"]
+TR-4467 fornisce a clienti e partner le best practice per l'implementazione di NetApp Data ONTAP in cluster a supporto delle soluzioni SAP Business Suite in esecuzione in un ambiente Microsoft SQL Server su Windows.
+
+link:https://www.netapp.com/pdf.html?item=/media/16865-tr-4467pdf.pdf["TR-4467: SAP con Microsoft SQL Server su Windows - Procedure consigliate con NetApp Clustered Data ONTAP e SnapCenter"^]

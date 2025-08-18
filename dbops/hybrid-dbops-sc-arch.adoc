@@ -1,0 +1,21 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-arch.html 
+summary: Questa sezione illustra una tipica architettura cloud ibrida per operazioni di sviluppo/test e DR. 
+keywords: architecture, synchronized database 
+---
+= Architettura della soluzione
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Il seguente diagramma di architettura illustra un'implementazione tipica del funzionamento del database aziendale in un cloud ibrido per operazioni di sviluppo/test e disaster recovery.
+
+image:hybrid-cloud-db-diagram.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+Nelle normali operazioni aziendali, i volumi di database sincronizzati nel cloud possono essere clonati e montati su istanze di database di sviluppo/test per lo sviluppo o il test delle applicazioni.  In caso di guasto, i volumi del database sincronizzati nel cloud possono essere attivati per il ripristino di emergenza.

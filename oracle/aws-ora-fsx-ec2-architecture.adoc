@@ -1,0 +1,31 @@
+---
+sidebar: sidebar 
+permalink: oracle/aws-ora-fsx-ec2-architecture.html 
+summary: 'Questa sezione illustra un"architettura di soluzione di distribuzione personalizzata RDS Oracle con storage Oracle RDS e FSx ONTAP personalizzato.' 
+keywords: architecture, Oracle RDS, RDS, FSx ONTAP, FSx, AWS, Oracle, HA, DR 
+---
+= Architettura della soluzione
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Il seguente diagramma di architettura illustra una distribuzione di database Oracle ad alta disponibilità su un'istanza AWS EC2 con il servizio di archiviazione FSx.  Per il ripristino in caso di disastro è possibile impostare uno schema di distribuzione simile, ma con la riserva in una regione diversa.
+
+All'interno dell'ambiente, l'istanza di elaborazione Oracle viene distribuita tramite una console di istanza AWS EC2.  Sono disponibili più tipi di istanze EC2 dalla console.  NetApp consiglia di distribuire un tipo di istanza EC2 orientata al database, come un'immagine m5 Ami con RedHat Enterprise Linux 8 e fino a 10 Gps di larghezza di banda di rete.
+
+L'archiviazione del database Oracle sui volumi FSx, invece, viene distribuita tramite la console AWS FSx o la CLI.  Successivamente, i volumi binari, di dati o di registro di Oracle vengono presentati e montati su un host Linux di istanza EC2.  A ciascun volume di dati o di registro possono essere assegnati più LUN, a seconda del protocollo di archiviazione sottostante utilizzato.
+
+image:aws-ora-fsx-ec2-arch.png["Questa immagine illustra un diagramma di architettura di esempio che include il cluster HA primario, il cluster HA di standby, i nodi di gestione e i nodi di connessione correlati."]
+
+Un cluster di storage FSx è progettato con doppia ridondanza, in modo che sia il cluster di storage primario che quello di standby vengano distribuiti in due diverse zone di disponibilità.  I volumi del database vengono replicati da un cluster FSx primario a un cluster FSx di standby a intervalli configurabili dall'utente per tutti i volumi binari, di dati e di log di Oracle.
+
+Questo ambiente Oracle ad alta disponibilità è gestito tramite un nodo controller Ansible, un server di backup SnapCenter e uno strumento UI.  L'installazione, la configurazione e la replica di Oracle sono automatizzate tramite kit di strumenti basati su playbook Ansible.  Qualsiasi aggiornamento del sistema operativo del kernel dell'istanza Oracle EC2 o patching Oracle può essere eseguito in parallelo per mantenere sincronizzati il sistema primario e quello di standby.  Infatti, la configurazione iniziale dell'automazione può essere facilmente ampliata per eseguire alcune attività Oracle quotidiane ricorrenti, se necessario.
+
+SnapCenter fornisce flussi di lavoro per il ripristino point-in-time del database Oracle o per la clonazione del database nelle zone primaria o di standby, se necessario.  Tramite l'interfaccia utente SnapCenter , è possibile configurare il backup e la replica del database Oracle su storage FSx in standby per un'elevata disponibilità o un ripristino di emergenza in base agli obiettivi RTO o RPO.
+
+La soluzione fornisce un processo alternativo che offre funzionalità simili a quelle disponibili nell'implementazione di Oracle RAC e Data Guard.

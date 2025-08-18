@@ -1,0 +1,218 @@
+---
+sidebar: sidebar 
+permalink: oracle/gcp-oracle-gcnv-overview.html 
+summary: 'I carichi di lavoro di Oracle Database richiedono una capacità di archiviazione scalabile che garantisca tempi di risposta IO costanti, larghezza di banda e bassa latenza.  Google Cloud NetApp Volumes fornisce un servizio di archiviazione file completamente gestito che supporta l"accesso al protocollo NFS, progettato specificamente per soddisfare questi requisiti esigenti.' 
+keywords: oracle, netapp, gcp, gcnv, overview 
+---
+= Panoramica: Oracle Database con Google Cloud NetApp Volumes
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+I carichi di lavoro di Oracle Database richiedono una capacità di archiviazione scalabile che garantisca tempi di risposta IO costanti, larghezza di banda e bassa latenza.  Google Cloud NetApp Volumes fornisce un servizio di archiviazione file completamente gestito che supporta l'accesso al protocollo NFS, progettato specificamente per soddisfare questi requisiti esigenti.
+
+Questa soluzione consente alle organizzazioni di eseguire carichi di lavoro di Oracle Database su Google Cloud mantenendo al contempo capacità di archiviazione di livello aziendale.
+
+
+
+== Vantaggi di Google Cloud NetApp Volumes
+
+Google Cloud NetApp Volumes offre i seguenti vantaggi:
+
+*Gestione dinamica delle risorse:*
+
+Le risorse di archiviazione possono essere adattate in tempo reale per soddisfare le esigenze aziendali.  Gli amministratori possono aumentare o diminuire la capacità di archiviazione in base alla domanda, senza interruzioni del servizio.  Questa flessibilità consente alle organizzazioni di ottimizzare in modo efficiente le proprie risorse di archiviazione, garantendo il mantenimento di livelli di prestazioni adeguati e controllando al contempo i costi.  Il sistema garantisce un ridimensionamento fluido sia delle caratteristiche di capacità che di prestazioni, adattandosi alle mutevoli esigenze del carico di lavoro senza influire sulle operazioni del database.
+
+*Architettura di livello aziendale:* NetApp Volumes si basa sulla tecnologia ONTAP , che fornisce una piattaforma di storage solida e affidabile.  L'infrastruttura è progettata con l'elevata disponibilità come principio fondamentale, incorporando ridondanza a più livelli.  Le funzionalità integrate di replicazione dei volumi tra sedi supportano una pianificazione completa della continuità aziendale e del disaster recovery.  Ciò include la protezione dei dati tra regioni, garantendo la disponibilità e la durabilità dei dati in diverse posizioni geografiche.
+
+*Gestione del carico di lavoro:*
+
+NetApp Volumes eccelle nel supportare più istanze di database, mantenendo al contempo un isolamento e delle prestazioni adeguati.  Le organizzazioni possono implementare una gestione granulare dell'archiviazione di ciascun database e persino dei componenti del database, come ad esempio file di dati selezionati o destinazioni di log di archivio.  Il risultato è una gestione e prestazioni ottimali.  Le risorse di archiviazione possono essere ridimensionate individualmente, garantendo flessibilità nell'allocazione delle risorse.  Questo controllo granulare consente una gestione efficiente di vari carichi di lavoro di database con requisiti di prestazioni e capacità differenti.
+
+*Protezione e gestione dei dati:*
+
+Le funzionalità di protezione dei dati includono snapshot istantanei in grado di catturare lo stato dell'applicazione in momenti specifici.  La tecnologia snapshot è efficiente in termini di spazio, riducendo al minimo il sovraccarico di archiviazione e mantenendo l'integrità dei dati.  Il servizio si integra perfettamente con le soluzioni di backup native, supportando la gestione completa del ciclo di vita dei dati.  Le organizzazioni possono implementare il ripristino puntuale, eseguire operazioni di backup e ripristino e gestire la conservazione dei dati in base alle proprie esigenze aziendali.
+
+*Supporto allo sviluppo e ai test:*
+
+NetApp Volumes semplifica la creazione di copie di database tramite efficienti funzionalità di clonazione dei volumi.  I team di sviluppo possono predisporre rapidamente ambienti di test a costi contenuti e senza influire sui carichi di lavoro di produzione.  La piattaforma garantisce l'isolamento degli spazi di lavoro di sviluppo, consentendo ai team di lavorare in modo indipendente condividendo al contempo le risorse infrastrutturali.  Queste funzionalità migliorano notevolmente i cicli di sviluppo e test, consentendo una rapida iterazione e convalida delle modifiche al database.
+
+*Architettura di archiviazione:*
+
+Il servizio offre più livelli per soddisfare diversi requisiti di carico di lavoro, dagli ambienti di sviluppo ai database di produzione mission-critical.  L'architettura supporta il ridimensionamento indipendente delle metriche di capacità e prestazioni, consentendo un'ottimizzazione precisa per carichi di lavoro specifici del database.  La piattaforma consente operazioni di database simultanee con accesso ai dati a bassa latenza, supportando le applicazioni aziendali più esigenti.
+
+*Opzioni di scalabilità:*
+
+La gestione dell'archiviazione diventa semplice grazie alla possibilità di aggiungere volumi in modo dinamico in base alle necessità.  La piattaforma è scalabile da gigabyte a petabyte, supportando database di qualsiasi dimensione.  Le caratteristiche delle prestazioni possono essere regolate in base ai requisiti del carico di lavoro, garantendo prestazioni costanti man mano che i database crescono.  Le funzionalità di scalabilità supportano sia la crescita pianificata sia i picchi imprevisti nei requisiti del database.
+
+
+
+== Casi d'uso
+
+*Ambienti di produzione ad alte prestazioni:*
+
+NetApp Volumes supporta distribuzioni di database Oracle mission-critical che richiedono IOPS sostenuti e caratteristiche prestazionali a bassa latenza.  L'architettura supporta carichi di lavoro sia OLTP che OLAP, con livelli di servizio configurabili che supportano vari profili di prestazioni.  NetApp Volumes garantisce prestazioni incredibilmente veloci, raggiungendo fino a 4,6 GiBps e 340K IOPS per una produttività eccezionale anche con carichi di lavoro misti di lettura/scrittura.
+
+*Migrazione nel cloud:*
+
+La piattaforma facilita le migrazioni lift-and-shift degli ambienti Oracle Database dall'infrastruttura on-premise a Google Cloud.  Le opzioni includono Oracle Recovery Manager (RMAN), Oracle Data Guard e Oracle GoldenGate.  L'architettura di archiviazione NFS consente una transizione fluida con modifiche architettoniche minime, supportando strategie di migrazione sia offline che online, mantenendo al contempo le procedure di backup e ripristino esistenti.
+
+*Architettura di consolidamento del database:*
+
+L'architettura consente il consolidamento del database tramite modelli di distribuzione multi-tenant.  Gli amministratori possono implementare l'isolamento delle risorse a livello di volume, con volumi dedicati per Oracle Pluggable Database, file di dati specifici, redo log e archive log.  Questa progettazione supporta l'architettura Oracle Multitenant e consente un utilizzo efficiente delle risorse, mantenendo al contempo l'isolamento delle prestazioni tra i database.
+
+*Replica del sistema aziendale:*
+
+Le funzionalità di snapshot e clonazione della piattaforma supportano il provisioning rapido di ambienti di sviluppo e test a partire dai dati di produzione.  La tecnologia di clonazione del volume consente di realizzare copie di database efficienti in termini di spazio e con caratteristiche di prestazioni indipendenti.  Questa funzionalità supporta pipeline CI/CD (integrazione continua e sviluppo continuo) che richiedono frequenti aggiornamenti del database e ambienti di test isolati con capacità di prestazioni di livello produttivo.
+
+
+
+== Architettura
+
+È possibile eseguire database Oracle su Google Compute Engine con uno o più volumi di archiviazione.  Il numero di volumi dipende dal livello di separazione dei dati.  Ad esempio, i database più piccoli potrebbero essere posizionati su un singolo volume.  I database più grandi con requisiti di I/O o di gestione più esigenti potrebbero richiedere volumi individuali di file di dati, redo log e archive log.  È possibile aggiungere anche volumi aggiuntivi per dati applicativi o di backup.  Ogni volume può essere dimensionato correttamente in base alle esigenze dei dati da ospitare.
+
+image:oracle-gcnv-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+
+
+== Preparazione dei Google Cloud NetApp Volumes
+
+Crea un pool di archiviazione Google Cloud NetApp Volumes con la capacità e il livello di servizio desiderati.  Consultare la Guida introduttiva per configurare Google Cloud NetApp Volumes.  Se stai migrando database Oracle esistenti da locale a Google, puoi utilizzare Metrics Explorer per ottenere statistiche di throughput aggiornate, necessarie per dimensionare il pool e i volumi Google Cloud NetApp Volumes Storage.  Per informazioni dettagliate su come utilizzare il servizio, contatta il tuo specialista Oracle su Google.  La capacità effettiva disponibile per i volumi in un pool di archiviazione è definita dalle dimensioni e dal livello di servizio (Standard, Premium o Extreme, ecc.) del pool di archiviazione selezionato
+
+*Scalabilità*
+
+I volumi NetApp sono in grado di scalare facilmente per adattarsi alla crescita dei dati e dei carichi di lavoro, supportando al contempo molti piccoli volumi.  Un singolo pool di archiviazione può facilmente crescere da un minimo di 2 TiB fino a qualsiasi dimensione fino a 10 PiB.  Fare riferimento ai dettagli su quote e limiti.
+
+*Componenti*
+
+La soluzione utilizza i seguenti componenti:
+
+* * Google Cloud NetApp Volumes* è un servizio di archiviazione dati basato su NetApp completamente gestito e di prima parte che offre funzionalità avanzate di gestione dei dati e prestazioni altamente scalabili.  È sviluppato da Google e NetApp, un partner di Google.
+* *Virtual Machines* è un'offerta di infrastruttura come servizio (IaaS).  È possibile utilizzare Compute Engine per distribuire risorse di elaborazione scalabili e on-demand.  Compute Engine offre la flessibilità della virtualizzazione, eliminando però le esigenze di manutenzione dell'hardware fisico.  Questa soluzione utilizzalink:https://cloud.google.com/architecture/enterprise-app-oracle-database-compute-engine["Motore di calcolo con database Oracle"] .
+* *Google Virtual Private Cloud Virtual Private Cloud (VPC)* fornisce funzionalità di rete alle istanze di macchine virtuali (VM) di Compute Engine, ai cluster di Google Kubernetes Engine (GKE) e ai carichi di lavoro serverless.  VPC fornisce una rete globale, scalabile e flessibile per le risorse e i servizi basati sul cloud.
+* *Oracle Database* è un sistema di gestione di database multi-modello.  Supporta vari tipi di dati e carichi di lavoro.  Il client dNFS ottimizza i percorsi I/O tra i server Oracle e NFS.  Di conseguenza, fornisce prestazioni notevolmente migliori rispetto ai client NFS tradizionali.
+
+
+
+
+== Vantaggi principali
+
+Questa immagine (Figura 2) mostra i vantaggi dell'utilizzo di Google Cloud NetApp Volumes con Oracle Database.
+
+image:oracle-gcnv-002.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+*Servizio semplice e affidabile*
+
+Google Cloud NetApp Volumes funziona in modo fluido all'interno di Google Cloud, offrendo un approccio semplice all'archiviazione aziendale.  In quanto servizio nativo, si integra naturalmente con l'ecosistema di Google Cloud, consentendo di effettuare il provisioning, gestire e scalare i volumi proprio come faresti con altre opzioni di archiviazione di Google Cloud.  Il servizio sfrutta il software di gestione dati ONTAP di NetApp, fornendo volumi NFS di livello aziendale specificamente ottimizzati per Oracle Database e altre applicazioni aziendali critiche.
+
+*Sistemi altamente performanti*
+
+Oltre a utilizzare uno storage condiviso e altamente scalabile, Google Cloud NetApp Volumes garantisce una bassa latenza.  Questi fattori rendono questo servizio particolarmente adatto all'utilizzo del protocollo NFS per eseguire carichi di lavoro di Oracle Database sulle reti.
+
+Le istanze di calcolo di Google Cloud possono utilizzare sistemi di archiviazione NetApp all-flash ad alte prestazioni.  Questi sistemi sono inoltre integrati nella rete Google Cloud.  Di conseguenza, si ottiene uno storage condiviso ad alta larghezza di banda e bassa latenza, paragonabile a una soluzione on-premise.  Le prestazioni di questa architettura soddisfano i requisiti dei carichi di lavoro aziendali più esigenti e critici per il business.  Per ulteriori informazioni sui vantaggi in termini di prestazioni di Google Cloud NetApp Volumes, vedere Google Cloud NetApp Volumes.
+
+Google Cloud NetApp Volumes si basa essenzialmente su una flotta bare-metal di sistemi di storage all-flash, garantendo prestazioni eccezionali per carichi di lavoro impegnativi.  Questa architettura, combinata con funzionalità di storage condivise e altamente scalabili, garantisce una latenza costantemente bassa, rendendola particolarmente adatta all'esecuzione di carichi di lavoro di Oracle Database tramite protocollo NFS.
+
+L'integrazione con le istanze di calcolo di Google Cloud garantisce l'accesso a prestazioni elevate.  Grazie alla profonda integrazione con il networking di Google Cloud, i clienti possono beneficiare di:
+
+* Archiviazione condivisa ad alta larghezza di banda e bassa latenza
+* Prestazioni paragonabili alle soluzioni on-premise
+* Scalabilità flessibile su richiesta
+* Configurazioni ottimizzate del carico di lavoro
+
+
+*Gestione dei dati su scala aziendale*
+
+La soluzione basata sul software ONTAP stabilisce nuovi standard per la gestione dei dati aziendali.  Una delle sue caratteristiche più importanti è la clonazione istantanea e poco ingombrante, che migliora notevolmente gli ambienti di sviluppo e test.  La piattaforma supporta la scalabilità dinamica della capacità e delle prestazioni, garantendo un utilizzo efficiente delle risorse in tutti i carichi di lavoro.  La funzionalità snapshot all'interno di Google Cloud NetApp Volumes rappresenta un importante progresso nella gestione dei database.  Questi snapshot forniscono punti di database coerenti con notevole efficienza.  I principali vantaggi includono:
+
+* Sovraccarico di archiviazione minimo per la creazione di snapshot
+* Capacità di creazione, replica e ripristino rapide
+* Impatto zero sulle prestazioni delle operazioni di volume
+* Elevata scalabilità per la creazione frequente di snapshot
+* Supporto per più snapshot simultanei
+
+
+Questa solida funzionalità di snapshot consente soluzioni di backup e ripristino che soddisfano gli accordi di servizio RTO (Recovery Time Objective) e RPO (Recovery Point Objective) più severi, senza compromettere le prestazioni del sistema.
+
+*DR ibrido*
+
+Google Cloud NetApp Volumes offre soluzioni complete di disaster recovery adatte sia agli ambienti cloud che a quelli ibridi.  Questa integrazione supporta piani DR sofisticati che funzionano efficacemente in più regioni, mantenendo al contempo la compatibilità con i data center locali.
+
+Il framework di disaster recovery fornisce:
+
+* Replicazione fluida del volume tra più sedi
+* Opzioni di recupero flessibili
+* Protezione dei dati coerente in tutti gli ambienti
+
+
+Questo approccio completo al disaster recovery garantisce la continuità aziendale mantenendo al contempo l'integrità dei dati in tutti gli scenari di distribuzione.  La flessibilità della soluzione consente alle organizzazioni di progettare e implementare strategie di DR che si allineano esattamente ai requisiti aziendali, sia che operino interamente nel cloud o in un ambiente ibrido.
+
+
+
+== Considerazioni
+
+Per questa soluzione valgono le seguenti considerazioni:
+
+*Disponibilità*
+
+Google Cloud NetApp Volumes garantisce una disponibilità di livello aziendale grazie alla sua solida architettura.  Il servizio è supportato da un accordo sul livello di servizio (SLA) completo, che specifica le garanzie di disponibilità e gli impegni di supporto.  Nell'ambito delle sue capacità di gestione dei dati su scala aziendale, il servizio offre funzionalità di snapshot che possono essere utilizzate efficacemente nelle soluzioni di backup e ripristino, garantendo la protezione dei dati e la continuità aziendale.
+
+image:oracle-gcnv-003.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+*Scalabilità:*
+
+La scalabilità integrata è una caratteristica fondamentale di Google Cloud NetApp Volumes, come descritto in dettaglio nella sezione dedicata ai sistemi ad alte prestazioni.  Il servizio consente il ridimensionamento dinamico delle risorse per soddisfare i requisiti di carico di lavoro in continua evoluzione, offrendo una flessibilità spesso assente nelle soluzioni di storage tradizionali.
+
+*Sicurezza:*
+
+Google Cloud NetApp Volumes implementa misure di sicurezza complete per proteggere i tuoi dati.  Il quadro di sicurezza comprende:
+
+* Meccanismi di protezione dei dati integrati
+* Funzionalità di crittografia avanzate
+* Regole di policy configurabili
+* Funzionalità di controllo degli accessi basate sui ruoli
+* Registrazione e monitoraggio dettagliati delle attività
+
+
+*Ottimizzazione dei costi:*
+
+Le configurazioni tradizionali on-premise solitamente richiedono un dimensionamento in base ai requisiti di carico di lavoro massimo, rendendole convenienti solo in caso di utilizzo di picco.  Al contrario, Google Cloud NetApp Volumes consente la scalabilità dinamica, consentendo di ottimizzare le configurazioni in base alle attuali esigenze del carico di lavoro, riducendo così le spese inutili.
+
+*Ottimizzazione delle dimensioni della VM:*
+
+L'architettura del servizio consente di risparmiare sui costi tramite l'ottimizzazione delle VM in diversi modi:
+
+*Vantaggi in termini di prestazioni:*
+
+L'accesso allo storage a bassa latenza consente alle VM più piccole di eguagliare le prestazioni delle VM più grandi utilizzando lo storage su disco ultra
+
+L'archiviazione collegata alla rete può raggiungere prestazioni superiori anche con VM più piccole grazie alle ridotte limitazioni di I/O
+
+*Limitazioni e vantaggi delle risorse:*
+
+Le risorse cloud in genere impongono limiti alle operazioni di I/O per impedire il degrado delle prestazioni dovuto all'esaurimento delle risorse o a interruzioni impreviste.  Con Google Cloud NetApp Volumes:
+
+* Si applicano solo i limiti di larghezza di banda della rete, che riguardano solo l'uscita dei dati. I limiti di I/O del disco a livello di VM non influiscono sulle prestazioni.
+* Le limitazioni di rete sono in genere superiori alle limitazioni di throughput del disco
+
+
+*Vantaggi in termini di risparmio sui costi*
+
+I vantaggi economici derivanti dall'utilizzo di VM più piccole includono:
+
+* Costi diretti di VM inferiori
+* Riduzione dei costi di licenza di Oracle Database, in particolare con SKU con codice vincolato
+* Assenza di componenti di costo I/O nello storage collegato alla rete
+* Costo totale di proprietà complessivamente inferiore rispetto alle soluzioni di archiviazione su disco
+
+
+
+
+== Conclusione
+
+Questa combinazione di scalabilità flessibile, prestazioni ottimizzate e utilizzo efficiente delle risorse rende Google Cloud NetApp Volumes una scelta conveniente per le esigenze di storage aziendale.  La capacità di dimensionare correttamente sia le risorse di archiviazione che quelle di elaborazione consente alle organizzazioni di mantenere prestazioni elevate, controllando al contempo i costi in modo efficace.

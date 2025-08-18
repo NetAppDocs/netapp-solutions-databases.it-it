@@ -1,0 +1,62 @@
+= 
+:allow-uri-read: 
+
+
+. Configurare le credenziali.
+. Crea tipi di credenziali.  Per le soluzioni che coinvolgono ONTAP, è necessario configurare il tipo di credenziale in modo che corrisponda alle voci di nome utente e password.
++
+.. Vai su Amministrazione → Tipi di credenziali e fai clic su Aggiungi.
+.. Fornire il nome e la descrizione.
+.. Incolla il seguente contenuto nella Configurazione di input:
++
+[source, cli]
+----
+fields:
+  - id: dst_cluster_username
+    type: string
+    label: Destination Cluster Username
+  - id: dst_cluster_password
+    type: string
+    label: Destination Cluster Password
+    secret: true
+  - id: src_cluster_username
+    type: string
+    label: Source Cluster Username
+  - id: src_cluster_password
+    type: string
+    label: Source Cluster Password
+    secret: true
+----
+.. Incolla il seguente contenuto nella configurazione dell'iniettore e poi fai clic su Salva:
++
+[source, cli]
+----
+extra_vars:
+  dst_cluster_username: '{{ dst_cluster_username }}'
+  dst_cluster_password: '{{ dst_cluster_password }}'
+  src_cluster_username: '{{ src_cluster_username }}'
+  src_cluster_password: '{{ src_cluster_password }}'
+----
+
+
+. Crea credenziali per ONTAP
++
+.. Vai su Risorse → Credenziali e fai clic su Aggiungi.
+.. Inserisci il nome e i dettagli dell'organizzazione per le credenziali ONTAP
+.. Selezionare il tipo di credenziale creato nel passaggio precedente.
+.. In Dettagli tipo, immettere il nome utente e la password per i cluster di origine e di destinazione.
+.. Fare clic su Salva
+
+
+. Crea credenziali per Oracle
++
+.. Vai su Risorse → Credenziali e fai clic su Aggiungi.
+.. Inserisci il nome e i dettagli dell'organizzazione per Oracle
+.. Selezionare il tipo di credenziale Macchina.
+.. In Dettagli tipo, immettere il nome utente e la password per gli host Oracle.
+.. Selezionare il metodo di escalation dei privilegi corretto e immettere nome utente e password.
+.. Fare clic su Salva
+.. Se necessario, ripetere il processo per una credenziale diversa per l'host dr_oracle.
+
+
+

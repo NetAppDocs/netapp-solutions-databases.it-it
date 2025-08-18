@@ -1,0 +1,494 @@
+---
+sidebar: sidebar 
+permalink: postgres/snapctr-psql-ontap.html 
+keywords: Database, PostgreSQL, ONTAP, backup, recovery, clone, SnapCenter 
+summary: La soluzione fornisce una panoramica e dettagli per il backup, il ripristino e la clonazione del database PostgreSQL su storage ONTAP nel cloud pubblico o in locale tramite lo strumento di interfaccia utente per la gestione del database NetApp SnapCenter . 
+---
+= TR-5000: Backup, ripristino e clonazione del database PostgreSQL su ONTAP con SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Allen Cao, Niyaz Mohamed, NetApp
+
+[role="lead"]
+La soluzione fornisce una panoramica e dettagli per il backup, il ripristino e la clonazione del database PostgreSQL su storage ONTAP nel cloud pubblico o in locale tramite lo strumento di interfaccia utente per la gestione del database NetApp SnapCenter .
+
+
+
+== Scopo
+
+Il software NetApp SnapCenter software è una piattaforma aziendale di facile utilizzo per coordinare e gestire in modo sicuro la protezione dei dati su applicazioni, database e file system.  Semplifica la gestione del ciclo di vita di backup, ripristino e clonazione delegando queste attività ai proprietari delle applicazioni senza sacrificare la capacità di supervisionare e regolare le attività sui sistemi di archiviazione.  Sfruttando la gestione dei dati basata sull'archiviazione, consente di aumentare le prestazioni e la disponibilità, nonché di ridurre i tempi di test e sviluppo.
+
+In questa documentazione, illustriamo la protezione e la gestione del database PostgreSQL sullo storage NetApp ONTAP nel cloud pubblico o in locale con uno strumento SnapCenter UI molto intuitivo.
+
+Questa soluzione affronta i seguenti casi d'uso:
+
+* Backup e ripristino del database PostgreSQL distribuito sullo storage NetApp ONTAP nel cloud pubblico o in locale.
+* Gestisci gli snapshot del database PostgreSQL e le copie clonate per accelerare lo sviluppo delle applicazioni e migliorare la gestione del ciclo di vita dei dati.
+
+
+
+
+== Pubblico
+
+Questa soluzione è destinata alle seguenti persone:
+
+* Un DBA che desidera distribuire database PostgreSQL sullo storage NetApp ONTAP .
+* Un architetto di soluzioni di database che desidera testare i carichi di lavoro PostgreSQL sullo storage NetApp ONTAP .
+* Un amministratore di storage che desidera distribuire e gestire database PostgreSQL su storage NetApp ONTAP .
+* Un proprietario di un'applicazione che vorrebbe installare un database PostgreSQL sullo storage NetApp ONTAP .
+
+
+
+
+== Ambiente di test e convalida della soluzione
+
+I test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio che potrebbe non corrispondere all'ambiente di distribuzione finale.  Vedi la sezione<<Fattori chiave per la considerazione dell'implementazione>> per maggiori informazioni.
+
+
+
+=== Architettura
+
+image:snapctr-psql-brc-architecture.png["Questa immagine fornisce un'immagine dettagliata del backup, del ripristino e della clonazione di PostgreSQL con SnapCenter."]
+
+
+
+=== Componenti hardware e software
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+| *Hardware* 
+
+
+| NetApp AFF A220 | Versione 9.12.1P2 | Ripiano per dischi DS224-12, modulo IOM12E, 24 dischi / capacità 12 TiB 
+
+
+| Cluster VMware vSphere | Versione 6.7 | 4 nodi di elaborazione ESXi NetApp HCI H410C 
+
+
+3+| *Software* 
+
+
+| RedHat Linux | RHEL Linux 8.6 (LVM) - x64 Gen2 | Abbonamento RedHat distribuito per i test 
+
+
+| Server Windows | DataCenter 2022; Hotpatch AE - x64 Gen2 | Hosting del server SnapCenter 
+
+
+| Database PostgreSQL | Versione 14.13 | Cluster di database PostgreSQL popolato con schema tpcc HammerDB 
+
+
+| Server SnapCenter | Versione 6.0 | Distribuzione del gruppo di lavoro 
+
+
+| Apri JDK | Versione java-11-openjdk | Requisiti del plugin SnapCenter sulle VM DB 
+
+
+| NFS | Versione 3.0 | Separare i dati e il registro in punti di montaggio diversi 
+
+
+| Ansible | nucleo 2.16.2 | Python 3.6.8 
+|===
+
+
+=== Configurazione del database PostgreSQL nell'ambiente di laboratorio
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+|  
+
+
+| *Server* | *Banca dati* | *Archiviazione DB* 
+
+
+| psql01 | Server di database primario | /pgdata, /pglogs Montaggi di volumi NFS su storage ONTAP 
+
+
+| psql02 | Clona il server del database | /pgdata_clone, /pglogs_clone Il volume clone sottile NFS viene montato sullo storage ONTAP 
+|===
+
+
+=== Fattori chiave per la considerazione dell'implementazione
+
+* * Distribuzione SnapCenter .*  SnapCenter può essere distribuito in un dominio Windows o in un ambiente Workgroup.  Per la distribuzione basata su dominio, l'account utente del dominio deve essere un account amministratore del dominio oppure l'utente del dominio deve appartenere al gruppo dell'amministratore locale sul server di hosting SnapCenter .
+* *Risoluzione del nome.*  Il server SnapCenter deve risolvere il nome nell'indirizzo IP per ciascun host del server del database di destinazione gestito.  Ogni host del server del database di destinazione deve risolvere il nome del server SnapCenter nell'indirizzo IP.  Se un server DNS non è disponibile, aggiungere la denominazione ai file host locali per risolvere il problema.
+* *Configurazione del gruppo di risorse.*  Un gruppo di risorse in SnapCenter è un raggruppamento logico di risorse simili di cui è possibile eseguire il backup insieme.  In questo modo si semplifica e si riduce il numero di processi di backup in un ambiente di database di grandi dimensioni.
+* *Backup separato del database completo e del registro di archivio.*  Il backup completo del database include volumi di dati e volumi di log con snapshot di gruppo coerenti.  Uno snapshot completo del database eseguito frequentemente comporta un maggiore consumo di spazio di archiviazione, ma migliora l'RTO.  Un'alternativa è rappresentata da snapshot completi del database meno frequenti e backup più frequenti dei log di archivio, che consumano meno spazio di archiviazione e migliorano l'RPO, ma possono estendere l'RTO.  Quando si imposta lo schema di backup, tenere in considerazione gli obiettivi RTO e RPO.  Esiste anche un limite (1023) al numero di backup snapshot su un volume.
+* * Delega Privileges .*  Sfrutta il controllo degli accessi basato sui ruoli integrato nell'interfaccia utente SnapCenter per delegare i privilegi ai team di applicazioni e database, se lo desideri.
+
+
+
+
+== Distribuzione della soluzione
+
+Le sezioni seguenti forniscono procedure dettagliate per la SnapCenter , la configurazione e il backup, il ripristino e la clonazione del database PostgreSQL su storage NetApp ONTAP nel cloud pubblico o in locale.
+
+
+
+=== Prerequisiti per la distribuzione
+
+[%collapsible%open]
+====
+. Per la distribuzione sono necessari due database PostgreSQL esistenti in esecuzione su storage ONTAP , uno come server DB primario e l'altro come server DB clone.  Per informazioni sulla distribuzione del database PostgreSQL su ONTAP, fare riferimento a TR-4956:link:aws-postgres-fsx-ec2-hadr.html["Distribuzione automatizzata di PostgreSQL ad alta disponibilità e ripristino di emergenza in AWS FSx/EC2"^] , alla ricerca del playbook di distribuzione automatizzata di PostgreSQL sull'istanza primaria.
+. Fornire un server Windows per eseguire lo strumento NetApp SnapCenter UI con la versione più recente.  Per maggiori dettagli fare riferimento al seguente link:link:https://docs.netapp.com/us-en/snapcenter/install/task_install_the_snapcenter_server_using_the_install_wizard.html["Installare il server SnapCenter"^] .
+
+
+====
+
+
+=== Installazione e configurazione SnapCenter
+
+[%collapsible%open]
+====
+Ti consigliamo di procedere onlinelink:https://docs.netapp.com/us-en/snapcenter/index.html["Documentazione del software SnapCenter"^] prima di procedere all'installazione e alla configurazione SnapCenter : .  Di seguito è riportato un riepilogo di alto livello dei passaggi per l'installazione e la configurazione del SnapCenter software per PostgreSQL su ONTAP.
+
+. Dal server Windows SnapCenter , scarica e installa l'ultima versione di Java JDK dalink:https://www.java.com/en/["Ottieni Java per le applicazioni desktop"^] .  Disattivare il firewall di Windows.
+. Dal server Windows di SnapCenter , scaricare e installare o aggiornare i prerequisiti SnapCenter 6.0 Windows: PowerShell - PowerShell-7.4.3-win-x64.msi e pacchetto di hosting .Net - dotnet-hosting-8.0.6-win.
+. Dal server Windows di SnapCenter , scaricare e installare l'ultima versione (attualmente 6.0) dell'eseguibile di installazione SnapCenter dal sito di supporto NetApp :link:https://mysupport.netapp.com/site/["NetApp | Supporto"^] .
+. Dal database DB VM, abilitare l'autenticazione senza password SSH per l'utente amministratore `admin` e i suoi privilegi sudo senza password.
+. Dalle VM del database DB, arrestare e disabilitare il demone del firewall Linux.  Installa java-11-openjdk.
+. Dal server Windows SnapCenter , avviare il browser per accedere a SnapCenter con le credenziali dell'utente amministratore locale di Windows o dell'utente di dominio tramite la porta 8146.
++
+image:snapctr-ora-azure-anf-setup-001.png["Questa immagine fornisce la schermata di accesso per il server SnapCenter"]
+
+. Revisione `Get Started` menù online.
++
+image:snapctr-ora-azure-anf-setup-002.png["Questa immagine fornisce il menu online per il server SnapCenter"]
+
+. In `Settings-Global Settings` , controllo `Hypervisor Settings` e clicca su Aggiorna.
++
+image:snapctr-ora-azure-anf-setup-003.png["Questa immagine fornisce le impostazioni dell'hypervisor per il server SnapCenter"]
+
+. Se necessario, regolare `Session Timeout` per l'interfaccia utente SnapCenter all'intervallo desiderato.
++
+image:snapctr-ora-azure-anf-setup-004.png["Questa immagine fornisce il timeout della sessione per il server SnapCenter"]
+
+. Se necessario, aggiungi altri utenti a SnapCenter .
++
+image:snapctr-ora-azure-anf-setup-006.png["Questa immagine fornisce Impostazioni-Utenti e Accesso per il server SnapCenter"]
+
+. IL `Roles` La scheda elenca i ruoli predefiniti che possono essere assegnati ai diversi utenti SnapCenter .  I ruoli personalizzati possono anche essere creati dall'utente amministratore con i privilegi desiderati.
++
+image:snapctr-ora-azure-anf-setup-007.png["Questa immagine fornisce i ruoli per il server SnapCenter"]
+
+. Da `Settings-Credential` , crea credenziali per gli obiettivi di gestione SnapCenter .  In questo caso d'uso dimostrativo, sono l'utente amministratore Linux per l'accesso alla VM del server DB e le credenziali PostgreSQL per l'accesso a PostgreSQL.
++
+image:snapctr-psql-setup-host-001.png["Questa immagine fornisce le credenziali per il server SnapCenter"]
+
++
+
+NOTE: Reimpostare la password dell'utente PostgreSQL postgres prima di creare le credenziali.
+
+. Da `Storage Systems` scheda, aggiungi `ONTAP cluster` con credenziali di amministratore del cluster ONTAP .  Per Azure NetApp Files, sarà necessario creare una credenziale specifica per l'accesso al pool di capacità.
++
+image:snapctr-psql-setup-ontap-001.png["Questa immagine fornisce Azure NetApp Files per il server SnapCenter"] image:snapctr-psql-setup-ontap-002.png["Questa immagine fornisce Azure NetApp Files per il server SnapCenter"]
+
+. Da `Hosts` scheda, aggiungi PostgreSQL DB VM, che installa il plugin SnapCenter per PostgreSQL su Linux.
++
+image:snapctr-psql-setup-host-002.png["Questa immagine fornisce gli host per il server SnapCenter"] image:snapctr-psql-setup-host-003.png["Questa immagine fornisce gli host per il server SnapCenter"] image:snapctr-psql-setup-host-005.png["Questa immagine fornisce gli host per il server SnapCenter"]
+
+. Una volta installato il plug-in host sulla macchina virtuale del server DB, i database sull'host vengono rilevati automaticamente e visibili in `Resources` scheda.
++
+image:snapctr-psql-bkup-001.png["Questa immagine fornisce le impostazioni-criteri per il server SnapCenter"]
+
+
+
+====
+
+
+=== Backup del database
+
+[%collapsible%open]
+====
+Il cluster PostgreSQL iniziale rilevato automaticamente visualizza un lucchetto rosso accanto al nome del cluster.  Deve essere sbloccato utilizzando le credenziali del database PostgreSQL create durante la configurazione SnapCenter nella sezione precedente.  Quindi, è necessario creare e applicare una policy di backup per proteggere il database.  Infine, esegui il backup manualmente o tramite uno scheduler per creare un backup SnapShot.  Nella sezione seguente vengono illustrate le procedure passo passo.
+
+* Sblocca il cluster PostgreSQL.
++
+.. Navigazione verso `Resources` scheda, che elenca il cluster PostgreSQL scoperto dopo l'installazione del plugin SnapCenter sulla VM del database.  Inizialmente è bloccato e il `Overall Status` del cluster di database mostra come `Not protected` .
++
+image:snapctr-psql-bkup-001.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Fare clic sul nome del cluster e quindi, `Configure Credentials` per aprire la pagina di configurazione delle credenziali.
++
+image:snapctr-psql-bkup-002.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Scegliere `postgres` credenziale creata durante la precedente configurazione SnapCenter .
++
+image:snapctr-psql-bkup-003.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Una volta applicate le credenziali, il cluster verrà sbloccato.
++
+image:snapctr-psql-bkup-004.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+
+
+* Creare una policy di backup per PostgreSQL.
++
+.. Vai a `Setting` - `Polices` e clicca su `New` per creare una politica di backup.
++
+image:snapctr-psql-bkup-006.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Assegna un nome alla policy di backup.
++
+image:snapctr-psql-bkup-007.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Scegli il tipo di archiviazione.  L'impostazione di backup predefinita dovrebbe andare bene per la maggior parte degli scenari.
++
+image:snapctr-psql-bkup-008.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Definire la frequenza di backup e la conservazione degli SnapShot.
++
+image:snapctr-psql-bkup-009.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Opzione per selezionare la replica secondaria se i volumi del database vengono replicati in una posizione secondaria.
++
+image:snapctr-psql-bkup-010.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Rivedi il riepilogo e `Finish` per creare la politica di backup.
++
+image:snapctr-psql-bkup-011.png["Questa immagine fornisce il backup del database per il server SnapCenter"] image:snapctr-psql-bkup-012.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+
+
+* Applicare una policy di backup per proteggere il database PostgreSQL.
++
+.. Torna indietro a `Resource` scheda, fare clic sul nome del cluster per avviare il flusso di lavoro di protezione del cluster PostgreSQL.
++
+image:snapctr-psql-bkup-005.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Accetta predefinito `Application Settings` .  Molte delle opzioni presenti in questa pagina non si applicano alla destinazione rilevata automaticamente.
++
+image:snapctr-psql-bkup-013.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Applica la policy di backup appena creata.  Se necessario, aggiungere una pianificazione di backup.
++
+image:snapctr-psql-bkup-014.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Fornire le impostazioni e-mail se è richiesta la notifica di backup.
++
+image:snapctr-psql-bkup-015.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Riepilogo della recensione e `Finish` per implementare la politica di backup.  Ora il cluster PostgreSQL è protetto.
++
+image:snapctr-psql-bkup-016.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Il backup viene eseguito in base alla pianificazione del backup o dalla topologia di backup del cluster, fare clic su `Backup Now` per attivare un backup manuale su richiesta.
++
+image:snapctr-psql-bkup-017-a.png["Questa immagine fornisce il backup del database per il server SnapCenter"] image:snapctr-psql-bkup-017.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+.. Monitorare il processo di backup da `Monitor` scheda.  In genere, per eseguire il backup di un database di grandi dimensioni occorrono pochi minuti e, nel nostro caso di test, ci sono voluti circa 4 minuti per eseguire il backup di volumi di database vicini a 1 TB.
++
+image:snapctr-psql-bkup-019.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+
+
+
+
+====
+
+
+=== Recupero del database
+
+[%collapsible%open]
+====
+In questa dimostrazione di ripristino del database, illustriamo un ripristino point-in-time del cluster del database PostgreSQL.  Per prima cosa, creare un backup SnapShot del volume del database sullo storage ONTAP utilizzando SnapCenter.  Quindi, accedi al database, crea una tabella di prova, annota il timestamp ed elimina la tabella di prova.  Ora avvia un ripristino dal backup fino al timestamp in cui viene creata la tabella di prova per recuperare la tabella eliminata.  Di seguito vengono descritti i dettagli del flusso di lavoro e della convalida del ripristino point-in-time del database PostgreSQL con l'interfaccia utente SnapCenter .
+
+. Accedi a PostgreSQL come `postgres` utente.  Crea, quindi elimina una tabella di prova.
++
+....
+postgres=# \dt
+Did not find any relations.
+
+
+postgres=# create table test (id integer, dt timestamp, event varchar(100));
+CREATE TABLE
+postgres=# \dt
+        List of relations
+ Schema | Name | Type  |  Owner
+--------+------+-------+----------
+ public | test | table | postgres
+(1 row)
+
+postgres=# insert into test values (1, now(), 'test PostgreSQL point in time recovery with SnapCenter');
+INSERT 0 1
+
+postgres=# select * from test;
+ id |             dt             |                         event
+----+----------------------------+--------------------------------------------------------
+  1 | 2024-10-08 17:55:41.657728 | test PostgreSQL point in time recovery with SnapCenter
+(1 row)
+
+postgres=# drop table test;
+DROP TABLE
+postgres=# \dt
+Did not find any relations.
+
+postgres=# select current_time;
+    current_time
+--------------------
+ 17:59:20.984144+00
+
+....
+. Da `Resources` scheda, apri la pagina di backup del database.  Selezionare il backup SnapShot da ripristinare.  Quindi, fare clic su `Restore` pulsante per avviare il flusso di lavoro di ripristino del database.  Quando si esegue un ripristino point-in-time, prendere nota del timestamp del backup.
++
+image:snapctr-psql-restore-001.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Selezionare `Restore scope` .  Al momento, una risorsa completa è l'unica opzione.
++
+image:snapctr-psql-restore-002.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Per `Recovery Scope` , scegliere `Recover to point in time` e immettere il timestamp fino al quale viene effettuato il rollforward del ripristino.
++
+image:snapctr-psql-restore-003.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. IL `PreOps` consente l'esecuzione di script sul database prima dell'operazione di ripristino/recupero oppure lasciarlo nero.
++
+image:snapctr-psql-restore-004.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. IL `PostOps` consente l'esecuzione di script sul database dopo l'operazione di ripristino/recupero oppure lasciarlo nero.
++
+image:snapctr-psql-restore-005.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Notifica via e-mail, se desiderato.
++
+image:snapctr-psql-restore-006.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Rivedi il riepilogo del lavoro e `Finish` per avviare il processo di ripristino.
++
+image:snapctr-psql-restore-007.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Fare clic sul lavoro in esecuzione per aprirlo `Job Details` finestra.  Lo stato del lavoro può anche essere aperto e visualizzato da `Monitor` scheda.
++
+image:snapctr-psql-restore-008.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Accedi a PostgreSQL come `postgres` utente e convalidare che la tabella di prova sia stata recuperata.
++
+....
+
+[postgres@psql01 ~]$ psql
+psql (14.13)
+Type "help" for help.
+
+postgres=# \dt
+        List of relations
+ Schema | Name | Type  |  Owner
+--------+------+-------+----------
+ public | test | table | postgres
+(1 row)
+
+postgres=# select * from test;
+ id |             dt             |                         event
+----+----------------------------+--------------------------------------------------------
+  1 | 2024-10-08 17:55:41.657728 | test PostgreSQL point in time recovery with SnapCenter
+(1 row)
+
+postgres=# select now();
+              now
+-------------------------------
+ 2024-10-08 18:22:33.767208+00
+(1 row)
+
+
+....
+
+
+====
+
+
+=== Clonazione del database
+
+[%collapsible%open]
+====
+La clonazione del cluster del database PostgreSQL tramite SnapCenter crea un nuovo volume clonato sottile da un backup snapshot di un volume di dati del database di origine.  Ancora più importante, è rapido (pochi minuti) ed efficiente rispetto ad altri metodi per creare una copia clonata del database di produzione a supporto dello sviluppo o dei test.  In questo modo si riducono drasticamente i costi di archiviazione e si migliora la gestione del ciclo di vita delle applicazioni del database.  La sezione seguente illustra il flusso di lavoro del clone del database PostgreSQL con SnapCenter UI.
+
+. Per convalidare il processo di clonazione.  Di nuovo, inserisci una riga nella tabella di prova.  Quindi eseguire un backup per acquisire i dati di prova.
++
+....
+postgres=# insert into test values (2, now(), 'test PostgreSQL clone to a different DB server host');
+INSERT 0 1
+postgres=# select * from test;
+ id |             dt             |                        event
+----+----------------------------+-----------------------------------------------------
+  2 | 2024-10-11 20:15:04.252868 | test PostgreSQL clone to a different DB server host
+(1 row)
+
+....
+. Da `Resources` scheda, aprire la pagina di backup del cluster del database.  Selezionare lo snapshot del backup del database che contiene i dati di prova.  Quindi, fare clic su `clone` pulsante per avviare il flusso di lavoro di clonazione del database.
++
+image:snapctr-psql-clone-001.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Selezionare un host del server DB diverso dal server DB di origine.  Scegliere una porta TCP 543x non utilizzata sull'host di destinazione.
++
+image:snapctr-psql-clone-002.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Inserire eventuali script da eseguire prima o dopo l'operazione di clonazione.
++
+image:snapctr-psql-clone-003.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Notifica via e-mail, se desiderato.
++
+image:snapctr-psql-clone-004.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Riepilogo della recensione e `Finish` per avviare il processo di clonazione.
++
+image:snapctr-psql-clone-005.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Fare clic sul lavoro in esecuzione per aprirlo `Job Details` finestra.  Lo stato del lavoro può anche essere aperto e visualizzato da `Monitor` scheda.
++
+image:snapctr-psql-clone-006.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Il database clonato si registra immediatamente con SnapCenter .
++
+image:snapctr-psql-clone-007.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Convalida il cluster di database clonato sull'host del server DB di destinazione.
++
+....
+
+[postgres@psql01 ~]$ psql -d postgres -h 10.61.186.7 -U postgres -p 5433
+Password for user postgres:
+psql (14.13)
+Type "help" for help.
+
+postgres=# select * from test;
+ id |             dt             |                        event
+----+----------------------------+-----------------------------------------------------
+  2 | 2024-10-11 20:15:04.252868 | test PostgreSQL clone to a different DB server host
+(1 row)
+
+postgres=# select pg_read_file('/etc/hostname') as hostname;
+ hostname
+----------
+ psql02  +
+
+(1 row)
+
+
+....
+
+
+====
+
+
+== Dove trovare ulteriori informazioni
+
+Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:
+
+* Documentazione del software SnapCenter
++
+link:https://docs.netapp.com/us-en/snapcenter/index.html["https://docs.netapp.com/us-en/snapcenter/index.html"^]
+
+* TR-4956: Distribuzione automatizzata di PostgreSQL ad alta disponibilità e ripristino di emergenza in AWS FSx/EC2
++
+link:aws-postgres-fsx-ec2-hadr.html["TR-4956: Distribuzione automatizzata di PostgreSQL ad alta disponibilità e ripristino di emergenza in AWS FSx/EC2"]
+
+

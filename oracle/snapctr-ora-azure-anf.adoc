@@ -1,0 +1,535 @@
+---
+sidebar: sidebar 
+permalink: oracle/snapctr-ora-azure-anf.html 
+keywords: Database, Oracle, Azure, ANF, Ansible, Automation 
+summary: La soluzione fornisce una panoramica e dettagli per la distribuzione automatizzata di Oracle in Microsoft Azure NetApp Files come archivio di database primario con protocollo NFS e il database Oracle viene distribuito come database contenitore con dNFS abilitato.  Il database distribuito in Azure è protetto tramite lo strumento SnapCenter UI per una gestione semplificata del database 
+---
+= TR-4988: Backup, ripristino e clonazione del database Oracle su ANF con SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Allen Cao, Niyaz Mohamed, NetApp
+
+[role="lead"]
+Questa soluzione fornisce una panoramica e dettagli per la distribuzione automatizzata di Oracle in Microsoft Azure NetApp Files come archivio di database primario con protocollo NFS e il database Oracle viene distribuito come database contenitore con dNFS abilitato.  Il database distribuito in Azure è protetto tramite lo strumento SnapCenter UI per una gestione semplificata del database.
+
+
+
+== Scopo
+
+Il software NetApp SnapCenter software è una piattaforma aziendale di facile utilizzo per coordinare e gestire in modo sicuro la protezione dei dati su applicazioni, database e file system.  Semplifica la gestione del ciclo di vita di backup, ripristino e clonazione delegando queste attività ai proprietari delle applicazioni senza sacrificare la capacità di supervisionare e regolare le attività sui sistemi di archiviazione.  Sfruttando la gestione dei dati basata sull'archiviazione, consente di aumentare le prestazioni e la disponibilità, nonché di ridurre i tempi di test e sviluppo.
+
+Nel TR-4987,link:../automation/automation-ora-anf-nfs.html["Distribuzione Oracle semplificata e automatizzata su Azure NetApp Files con NFS"^] , dimostriamo la distribuzione automatizzata di Oracle su Azure NetApp Files (ANF) nel cloud Azure.  In questa documentazione, illustriamo la protezione e la gestione del database Oracle su ANF nel cloud Azure con uno strumento SnapCenter UI molto intuitivo.
+
+Questa soluzione affronta i seguenti casi d'uso:
+
+* Backup e ripristino del database Oracle distribuito su ANF nel cloud Azure con SnapCenter.
+* Gestisci snapshot di database e copie clonate per accelerare lo sviluppo delle applicazioni e migliorare la gestione del ciclo di vita dei dati.
+
+
+
+
+== Pubblico
+
+Questa soluzione è destinata alle seguenti persone:
+
+* Un DBA che desidera distribuire database Oracle su Azure NetApp Files.
+* Un architetto di soluzioni di database che desidera testare i carichi di lavoro Oracle su Azure NetApp Files.
+* Un amministratore di storage che desidera distribuire e gestire database Oracle su Azure NetApp Files.
+* Un proprietario di un'applicazione che vorrebbe creare un database Oracle su Azure NetApp Files.
+
+
+
+
+== Ambiente di test e convalida della soluzione
+
+I test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio che potrebbe non corrispondere all'ambiente di distribuzione finale.  Vedi la sezione<<Fattori chiave per la considerazione dell'implementazione>> per maggiori informazioni.
+
+
+
+=== Architettura
+
+image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadro dettagliato della configurazione di distribuzione di Oracle nel cloud pubblico AWS con iSCSI e ASM."]
+
+
+
+=== Componenti hardware e software
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+| *Hardware* 
+
+
+| Azure NetApp Files | Offerta attuale in Azure da parte di Microsoft | Un pool di capacità con livello di servizio Premium 
+
+
+| VM di Azure per server DB | Standard_B4ms - 4 vCPU, 16 GiB | Due istanze di macchine virtuali Linux 
+
+
+| VM di Azure per SnapCenter | Standard_B4ms - 4 vCPU, 16 GiB | Un'istanza di macchina virtuale Windows 
+
+
+3+| *Software* 
+
+
+| RedHat Linux | RHEL Linux 8.6 (LVM) - x64 Gen2 | Abbonamento RedHat distribuito per i test 
+
+
+| Server Windows | DataCenter 2022; Hotpatch AE - x64 Gen2 | Hosting del server SnapCenter 
+
+
+| Database Oracle | Versione 19.18 | Patch p34765931_190000_Linux-x86-64.zip 
+
+
+| Oracle OPatch | Versione 12.2.0.1.36 | Patch p6880880_190000_Linux-x86-64.zip 
+
+
+| Server SnapCenter | Versione 5.0 | Distribuzione del gruppo di lavoro 
+
+
+| Apri JDK | Versione java-11-openjdk | Requisiti del plugin SnapCenter sulle VM DB 
+
+
+| NFS | Versione 3.0 | Oracle dNFS abilitato 
+
+
+| Ansible | nucleo 2.16.2 | Python 3.6.8 
+|===
+
+
+=== Configurazione del database Oracle nell'ambiente di laboratorio
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+|  
+
+
+| *Server* | *Banca dati* | *Archiviazione DB* 
+
+
+| ora-01 | NTAP1(NTAP1_PDB1,NTAP1_PDB2,NTAP1_PDB3) | /u01, /u02, /u03 montaggi NFS sul pool di capacità ANF 
+
+
+| ora-02 | NTAP2(NTAP2_PDB1,NTAP2_PDB2,NTAP2_PDB3) | /u01, /u02, /u03 montaggi NFS sul pool di capacità ANF 
+|===
+
+
+=== Fattori chiave per la considerazione dell'implementazione
+
+* * Distribuzione SnapCenter .*  SnapCenter può essere distribuito in un dominio Windows o in un ambiente Workgroup.  Per la distribuzione basata su dominio, l'account utente del dominio deve essere un account amministratore del dominio oppure l'utente del dominio deve appartenere al gruppo dell'amministratore locale sul server di hosting SnapCenter .
+* *Risoluzione del nome.*  Il server SnapCenter deve risolvere il nome nell'indirizzo IP per ciascun host del server del database di destinazione gestito.  Ogni host del server del database di destinazione deve risolvere il nome del server SnapCenter nell'indirizzo IP.  Se un server DNS non è disponibile, aggiungere la denominazione ai file host locali per risolvere il problema.
+* *Configurazione del gruppo di risorse.*  Un gruppo di risorse in SnapCenter è un raggruppamento logico di risorse simili di cui è possibile eseguire il backup insieme.  In questo modo si semplifica e si riduce il numero di processi di backup in un ambiente di database di grandi dimensioni.
+* *Backup separato del database completo e del registro di archivio.*  Il backup completo del database include volumi di dati e volumi di log con snapshot di gruppo coerenti.  Uno snapshot completo del database eseguito frequentemente comporta un maggiore consumo di spazio di archiviazione, ma migliora l'RTO.  Un'alternativa è rappresentata da snapshot completi del database meno frequenti e backup più frequenti dei log di archivio, che consumano meno spazio di archiviazione e migliorano l'RPO, ma possono estendere l'RTO.  Quando si imposta lo schema di backup, tenere in considerazione gli obiettivi RTO e RPO.  Esiste anche un limite (1023) al numero di backup snapshot su un volume.
+* * Delega Privileges .*  Sfrutta il controllo degli accessi basato sui ruoli integrato nell'interfaccia utente SnapCenter per delegare i privilegi ai team di applicazioni e database, se lo desideri.
+
+
+
+
+== Distribuzione della soluzione
+
+Le sezioni seguenti forniscono procedure dettagliate per la distribuzione, la configurazione e il backup, il ripristino e la clonazione SnapCenter , nonché per il database Oracle su Azure NetApp Files nel cloud di Azure.
+
+
+
+=== Prerequisiti per la distribuzione
+
+[%collapsible%open]
+====
+Per la distribuzione sono necessari database Oracle esistenti in esecuzione su ANF in Azure.  In caso contrario, seguire i passaggi indicati di seguito per creare due database Oracle per la convalida della soluzione.  Per i dettagli sulla distribuzione del database Oracle su ANF nel cloud Azure con automazione, fare riferimento a TR-4987:link:../automation/automation-ora-anf-nfs.html["Distribuzione Oracle semplificata e automatizzata su Azure NetApp Files con NFS"^]
+
+. È stato configurato un account Azure e sono stati creati i segmenti di rete e VNet necessari all'interno dell'account Azure.
+. Dal portale cloud di Azure, distribuisci le VM Linux di Azure come server Oracle DB.  Creare un pool di capacità Azure NetApp Files e volumi di database per il database Oracle.  Abilita l'autenticazione con chiave privata/pubblica SSH della VM per azureuser sui server DB.  Per i dettagli sulla configurazione dell'ambiente, vedere il diagramma dell'architettura nella sezione precedente.  Riferito anche alink:azure-ora-nfile-procedures.html["Procedure di distribuzione Oracle dettagliate su Azure VM e Azure NetApp Files"^] per informazioni dettagliate.
++
+
+NOTE: Per le VM di Azure distribuite con ridondanza del disco locale, assicurarsi di aver allocato almeno 128 GB nel disco radice della VM per avere spazio sufficiente per organizzare i file di installazione di Oracle e aggiungere il file di scambio del sistema operativo.  Espandere di conseguenza le partizioni del sistema operativo /tmplv e /rootlv.  Assicurarsi che la denominazione del volume del database segua la convenzione VMname-u01, VMname-u02 e VMname-u03.
+
++
+[source, cli]
+----
+sudo lvresize -r -L +20G /dev/mapper/rootvg-rootlv
+----
++
+[source, cli]
+----
+sudo lvresize -r -L +10G /dev/mapper/rootvg-tmplv
+----
+. Dal portale cloud di Azure, predisponi un server Windows per eseguire lo strumento NetApp SnapCenter UI con la versione più recente.  Per maggiori dettagli fare riferimento al seguente link:link:https://docs.netapp.com/us-en/snapcenter/install/task_install_the_snapcenter_server_using_the_install_wizard.html["Installare il server SnapCenter"^] .
+. Fornire una VM Linux come nodo controller Ansible con installata l'ultima versione di Ansible e Git.  Per maggiori dettagli fare riferimento al seguente link:link:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["Introduzione all'automazione delle soluzioni NetApp ^"^] nella sezione -
+`Setup the Ansible Control Node for CLI deployments on RHEL / CentOS` O
+`Setup the Ansible Control Node for CLI deployments on Ubuntu / Debian` .
++
+
+NOTE: Il nodo del controller Ansible può essere localizzato in locale o nel cloud di Azure, purché riesca a raggiungere le VM del database di Azure tramite la porta SSH.
+
+. Clonare una copia del toolkit di automazione della distribuzione NetApp Oracle per NFS.  Seguire le istruzioni inlink:../automation/automation-ora-anf-nfs.html["TR-4887"^] per eseguire i playbook.
++
+[source, cli]
+----
+git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_nfs.git
+----
+. Fase successiva ai file di installazione di Oracle 19c nella directory /tmp/archive della VM di Azure DB con autorizzazione 777.
++
+....
+installer_archives:
+  - "LINUX.X64_193000_db_home.zip"
+  - "p34765931_190000_Linux-x86-64.zip"
+  - "p6880880_190000_Linux-x86-64.zip"
+....
+. Guarda il seguente video:
++
+.Backup, ripristino e clonazione del database Oracle su ANF con SnapCenter
+video::960fb370-c6e0-4406-b6d5-b110014130e8[panopto,width=360]
+. Rivedere il `Get Started` menù online.
+
+
+====
+
+
+=== Installazione e configurazione SnapCenter
+
+[%collapsible%open]
+====
+Ti consigliamo di procedere onlinelink:https://docs.netapp.com/us-en/snapcenter/index.html["Documentazione del software SnapCenter"^] prima di procedere all'installazione e alla configurazione SnapCenter : .  Di seguito è riportato un riepilogo generale dei passaggi per l'installazione e la configurazione del SnapCenter software per Oracle su Azure ANF.
+
+. Dal server Windows SnapCenter , scarica e installa l'ultima versione di Java JDK dalink:https://www.java.com/en/["Ottieni Java per le applicazioni desktop"^] .
+. Dal server Windows di SnapCenter , scaricare e installare l'ultima versione (attualmente 5.0) dell'eseguibile di installazione SnapCenter dal sito di supporto NetApp :link:https://mysupport.netapp.com/site/["NetApp | Supporto"^] .
+. Dopo l'installazione del server SnapCenter , avviare il browser per accedere a SnapCenter con le credenziali dell'utente amministratore locale di Windows o dell'utente di dominio tramite la porta 8146.
++
+image:snapctr-ora-azure-anf-setup-001.png["Questa immagine fornisce la schermata di accesso per il server SnapCenter"]
+
+. Revisione `Get Started` menù online.
++
+image:snapctr-ora-azure-anf-setup-002.png["Questa immagine fornisce il menu online per il server SnapCenter"]
+
+. In `Settings-Global Settings` , controllo `Hypervisor Settings` e clicca su Aggiorna.
++
+image:snapctr-ora-azure-anf-setup-003.png["Questa immagine fornisce le impostazioni dell'hypervisor per il server SnapCenter"]
+
+. Se necessario, regolare `Session Timeout` per l'interfaccia utente SnapCenter all'intervallo desiderato.
++
+image:snapctr-ora-azure-anf-setup-004.png["Questa immagine fornisce il timeout della sessione per il server SnapCenter"]
+
+. Se necessario, aggiungi altri utenti a SnapCenter .
++
+image:snapctr-ora-azure-anf-setup-006.png["Questa immagine fornisce Impostazioni-Utenti e Accesso per il server SnapCenter"]
+
+. IL `Roles` La scheda elenca i ruoli predefiniti che possono essere assegnati ai diversi utenti SnapCenter .  I ruoli personalizzati possono anche essere creati dall'utente amministratore con i privilegi desiderati.
++
+image:snapctr-ora-azure-anf-setup-007.png["Questa immagine fornisce i ruoli per il server SnapCenter"]
+
+. Da `Settings-Credential` , crea credenziali per gli obiettivi di gestione SnapCenter .  In questo caso d'uso dimostrativo, sono un utente Linux per l'accesso alla macchina virtuale di Azure e credenziali ANF per l'accesso al pool di capacità.
++
+image:snapctr-ora-azure-anf-setup-008.png["Questa immagine fornisce le credenziali per il server SnapCenter"] image:snapctr-ora-azure-anf-setup-009.png["Questa immagine fornisce le credenziali per il server SnapCenter"] image:snapctr-ora-azure-anf-setup-010.png["Questa immagine fornisce le credenziali per il server SnapCenter"]
+
+. Da `Storage Systems` scheda, aggiungi `Azure NetApp Files` con le credenziali create sopra.
++
+image:snapctr-ora-azure-anf-setup-011.png["Questa immagine fornisce Azure NetApp Files per il server SnapCenter"] image:snapctr-ora-azure-anf-setup-012.png["Questa immagine fornisce Azure NetApp Files per il server SnapCenter"]
+
+. Da `Hosts` scheda, aggiungi Azure DB VM, che installa il plug-in SnapCenter per Oracle su Linux.
++
+image:snapctr-ora-azure-anf-setup-013.png["Questa immagine fornisce gli host per il server SnapCenter"] image:snapctr-ora-azure-anf-setup-014.png["Questa immagine fornisce gli host per il server SnapCenter"] image:snapctr-ora-azure-anf-setup-015.png["Questa immagine fornisce gli host per il server SnapCenter"]
+
+. Una volta installato il plug-in host sulla macchina virtuale del server DB, i database sull'host vengono rilevati automaticamente e visibili in `Resources` scheda.  Torna a `Settings-Polices` , creare policy di backup per il backup online completo del database Oracle e archiviare solo i log di backup.  Fare riferimento a questo documentolink:https://docs.netapp.com/us-en/snapcenter/protect-sco/task_create_backup_policies_for_oracle_database.html["Creare policy di backup per i database Oracle"^] per procedure dettagliate passo dopo passo.
++
+image:snapctr-ora-azure-anf-setup-005.png["Questa immagine fornisce le impostazioni-criteri per il server SnapCenter"]
+
+
+
+====
+
+
+=== Backup del database
+
+[%collapsible%open]
+====
+Un backup snapshot NetApp crea un'immagine puntuale dei volumi del database che è possibile utilizzare per il ripristino in caso di errore del sistema o perdita di dati.  I backup snapshot richiedono pochissimo tempo, solitamente meno di un minuto.  L'immagine di backup consuma uno spazio di archiviazione minimo e comporta un sovraccarico di prestazioni trascurabile, poiché registra solo le modifiche apportate ai file dall'ultima copia snapshot.  La sezione seguente illustra l'implementazione degli snapshot per il backup del database Oracle in SnapCenter.
+
+. Navigazione verso `Resources` scheda, che elenca i database scoperti una volta installato il plugin SnapCenter sulla VM del database.  Inizialmente, il `Overall Status` del database mostra come `Not protected` .
++
+image:snapctr-ora-azure-anf-bkup-001.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Clicca su `View` menu a discesa per cambiare in `Resource Group` .  Clicca su `Add` segno sulla destra per aggiungere un gruppo di risorse.
++
+image:snapctr-ora-azure-anf-bkup-002.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Assegna un nome al gruppo di risorse, ai tag e a qualsiasi denominazione personalizzata.
++
+image:snapctr-ora-azure-anf-bkup-003.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Aggiungi risorse al tuo `Resource Group` .  Il raggruppamento di risorse simili può semplificare la gestione del database in un ambiente di grandi dimensioni.
++
+image:snapctr-ora-azure-anf-bkup-004.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Seleziona la policy di backup e imposta una pianificazione cliccando sul segno '+' sotto `Configure Schedules` .
++
+image:snapctr-ora-azure-anf-bkup-005.png["Questa immagine fornisce il backup del database per il server SnapCenter"] image:snapctr-ora-azure-anf-bkup-006.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Se la verifica del backup non è configurata nella policy, lasciare la pagina di verifica così com'è.
++
+image:snapctr-ora-azure-anf-bkup-007.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Per inviare tramite e-mail un report di backup e una notifica, è necessario un server di posta SMTP nell'ambiente.  Oppure lasciarlo nero se non è configurato un server di posta.
++
+image:snapctr-ora-azure-anf-bkup-008.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Riepilogo del nuovo gruppo di risorse.
++
+image:snapctr-ora-azure-anf-bkup-009.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Ripetere le procedure sopra descritte per creare un backup del solo registro di archivio del database con la corrispondente policy di backup.
++
+image:snapctr-ora-azure-anf-bkup-010-a.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Fare clic su un gruppo di risorse per visualizzare le risorse che include.  Oltre al backup pianificato, è possibile avviare un backup una tantum cliccando su `Backup Now` .
++
+image:snapctr-ora-azure-anf-bkup-010.png["Questa immagine fornisce il backup del database per il server SnapCenter"] image:snapctr-ora-azure-anf-bkup-011.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Fare clic sul lavoro in esecuzione per aprire una finestra di monitoraggio, che consente all'operatore di seguire l'avanzamento del lavoro in tempo reale.
++
+image:snapctr-ora-azure-anf-bkup-012.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+. Una volta completato correttamente un processo di backup, nella topologia del database viene visualizzato un set di backup snapshot.  Un set di backup completo del database include uno snapshot dei volumi di dati del database e uno snapshot dei volumi di log del database.  Un backup solo log contiene solo uno snapshot dei volumi di log del database.
++
+image:snapctr-ora-azure-anf-bkup-013.png["Questa immagine fornisce il backup del database per il server SnapCenter"]
+
+
+
+====
+
+
+=== Recupero del database
+
+[%collapsible%open]
+====
+Il ripristino del database tramite SnapCenter ripristina una copia istantanea dell'immagine del volume del database in un dato momento.  Il database viene quindi riportato al punto desiderato tramite SCN/timestamp o a un punto consentito dai log di archivio disponibili nel set di backup.  Nella sezione seguente viene illustrato il flusso di lavoro del ripristino del database con SnapCenter UI.
+
+. Da `Resources` scheda, apri il database `Primary Backup(s)` pagina.  Scegli l'istantanea del volume dei dati del database, quindi fai clic su `Restore` pulsante per avviare il flusso di lavoro di ripristino del database.  Annotare il numero SCN o il timestamp nei set di backup se si desidera eseguire il ripristino tramite Oracle SCN o timestamp.
++
+image:snapctr-ora-azure-anf-restore-001.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Selezionare `Restore Scope` .  Per un database contenitore, SnapCenter è flessibile nell'eseguire un ripristino a livello di database contenitore completo (tutti i file di dati), database collegabili o tablespace.
++
+image:snapctr-ora-azure-anf-restore-002.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Selezionare `Recovery Scope` . `All logs` significa applicare tutti i log di archivio disponibili nel set di backup.  È disponibile anche il recupero point-in-time tramite SCN o timestamp.
++
+image:snapctr-ora-azure-anf-restore-003.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. IL `PreOps` consente l'esecuzione di script sul database prima dell'operazione di ripristino/recupero.
++
+image:snapctr-ora-azure-anf-restore-004.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. IL `PostOps` consente l'esecuzione di script sul database dopo l'operazione di ripristino/recupero.
++
+image:snapctr-ora-azure-anf-restore-005.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Notifica via e-mail, se desiderato.
++
+image:snapctr-ora-azure-anf-restore-006.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Ripristina riepilogo lavoro
++
+image:snapctr-ora-azure-anf-restore-007.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Fare clic sul lavoro in esecuzione per aprirlo `Job Details` finestra.  Lo stato del lavoro può anche essere aperto e visualizzato da `Monitor` scheda.
++
+image:snapctr-ora-azure-anf-restore-008.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+
+
+====
+
+
+=== Clonazione del database
+
+[%collapsible%open]
+====
+La clonazione del database tramite SnapCenter viene eseguita creando un nuovo volume da uno snapshot di un volume.  Il sistema utilizza le informazioni dello snapshot per clonare un nuovo volume utilizzando i dati presenti sul volume al momento dello snapshot.  Ancora più importante, è rapido (pochi minuti) ed efficiente rispetto ad altri metodi per creare una copia clonata del database di produzione a supporto dello sviluppo o dei test.  Migliorate così notevolmente la gestione del ciclo di vita delle vostre applicazioni di database.  La sezione seguente illustra il flusso di lavoro della clonazione del database con l'interfaccia utente SnapCenter .
+
+. Da `Resources` scheda, apri il database `Primary Backup(s)` pagina.  Scegli l'istantanea del volume dei dati del database, quindi fai clic su `clone` pulsante per avviare il flusso di lavoro di clonazione del database.
++
+image:snapctr-ora-azure-anf-clone-001.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Assegnare un nome al SID del database clone.  Facoltativamente, per un database contenitore, la clonazione può essere effettuata anche a livello PDB.
++
+image:snapctr-ora-azure-anf-clone-002.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Seleziona il server DB in cui desideri posizionare la copia del database clonato.  Mantieni i percorsi predefiniti dei file, a meno che tu non voglia rinominarli in modo diverso.
++
+image:snapctr-ora-azure-anf-clone-003.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Sull'host del database clone avrebbe dovuto essere installato e configurato lo stesso stack software Oracle del database di origine.  Mantieni le credenziali predefinite ma modificale `Oracle Home Settings` per abbinarlo alle impostazioni sull'host del database clone.
++
+image:snapctr-ora-azure-anf-clone-004.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. IL `PreOps` consente l'esecuzione degli script prima dell'operazione di clonazione.  I parametri del database possono essere modificati per soddisfare le esigenze di un database clone rispetto a un database di produzione, ad esempio un target SGA ridotto.
++
+image:snapctr-ora-azure-anf-clone-005.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. IL `PostOps` consente l'esecuzione di script sul database dopo l'operazione di clonazione.  Il ripristino del database clone può essere SCN, basato su timestamp o Until cancel (eseguendo il rollforward del database all'ultimo log archiviato nel set di backup).
++
+image:snapctr-ora-azure-anf-clone-006.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Notifica via e-mail, se desiderato.
++
+image:snapctr-ora-azure-anf-clone-007.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Riepilogo del lavoro di clonazione.
++
+image:snapctr-ora-azure-anf-clone-008.png["Questa immagine fornisce un clone del database per il server SnapCenter"]
+
+. Fare clic sul lavoro in esecuzione per aprirlo `Job Details` finestra.  Lo stato del lavoro può anche essere aperto e visualizzato da `Monitor` scheda.
++
+image:snapctr-ora-azure-anf-clone-009.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Il database clonato si registra immediatamente con SnapCenter .
++
+image:snapctr-ora-azure-anf-clone-010.png["Questa immagine fornisce il ripristino del database per il server SnapCenter"]
+
+. Convalida il database clone sull'host del server DB.  Per un database di sviluppo clonato, la modalità di archiviazione del database dovrebbe essere disattivata.
++
+....
+
+[azureuser@ora-02 ~]$ sudo su
+[root@ora-02 azureuser]# su - oracle
+Last login: Tue Feb  6 16:26:28 UTC 2024 on pts/0
+
+[oracle@ora-02 ~]$ uname -a
+Linux ora-02 4.18.0-372.9.1.el8.x86_64 #1 SMP Fri Apr 15 22:12:19 EDT 2022 x86_64 x86_64 x86_64 GNU/Linux
+[oracle@ora-02 ~]$ df -h
+Filesystem                                       Size  Used Avail Use% Mounted on
+devtmpfs                                         7.7G     0  7.7G   0% /dev
+tmpfs                                            7.8G     0  7.8G   0% /dev/shm
+tmpfs                                            7.8G   49M  7.7G   1% /run
+tmpfs                                            7.8G     0  7.8G   0% /sys/fs/cgroup
+/dev/mapper/rootvg-rootlv                         22G   17G  5.6G  75% /
+/dev/mapper/rootvg-usrlv                          10G  2.0G  8.1G  20% /usr
+/dev/mapper/rootvg-homelv                       1014M   40M  975M   4% /home
+/dev/sda1                                        496M  106M  390M  22% /boot
+/dev/mapper/rootvg-varlv                         8.0G  958M  7.1G  12% /var
+/dev/sda15                                       495M  5.9M  489M   2% /boot/efi
+/dev/mapper/rootvg-tmplv                          12G  8.4G  3.7G  70% /tmp
+tmpfs                                            1.6G     0  1.6G   0% /run/user/54321
+172.30.136.68:/ora-02-u03                        250G  2.1G  248G   1% /u03
+172.30.136.68:/ora-02-u01                        100G   10G   91G  10% /u01
+172.30.136.68:/ora-02-u02                        250G  7.5G  243G   3% /u02
+tmpfs                                            1.6G     0  1.6G   0% /run/user/1000
+tmpfs                                            1.6G     0  1.6G   0% /run/user/0
+172.30.136.68:/ora-01-u02-Clone-020624161543077  250G  8.2G  242G   4% /u02_ntap1dev
+
+[oracle@ora-02 ~]$ cat /etc/oratab
+#
+# This file is used by ORACLE utilities.  It is created by root.sh
+# and updated by either Database Configuration Assistant while creating
+# a database or ASM Configuration Assistant while creating ASM instance.
+
+# A colon, ':', is used as the field terminator.  A new line terminates
+# the entry.  Lines beginning with a pound sign, '#', are comments.
+#
+# Entries are of the form:
+#   $ORACLE_SID:$ORACLE_HOME:<N|Y>:
+#
+# The first and second fields are the system identifier and home
+# directory of the database respectively.  The third field indicates
+# to the dbstart utility that the database should , "Y", or should not,
+# "N", be brought up at system boot time.
+#
+# Multiple entries with the same $ORACLE_SID are not allowed.
+#
+#
+NTAP2:/u01/app/oracle/product/19.0.0/NTAP2:Y
+# SnapCenter Plug-in for Oracle Database generated entry (DO NOT REMOVE THIS LINE)
+ntap1dev:/u01/app/oracle/product/19.0.0/NTAP2:N
+
+
+[oracle@ora-02 ~]$ export ORACLE_SID=ntap1dev
+[oracle@ora-02 ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Feb 6 16:29:02 2024
+Version 19.18.0.0.0
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.18.0.0.0
+
+SQL> select name, open_mode, log_mode from v$database;
+
+NAME      OPEN_MODE            LOG_MODE
+--------- -------------------- ------------
+NTAP1DEV  READ WRITE           ARCHIVELOG
+
+
+SQL> shutdown immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> startup mount;
+ORACLE instance started.
+
+Total System Global Area 3221223168 bytes
+Fixed Size                  9168640 bytes
+Variable Size             654311424 bytes
+Database Buffers         2550136832 bytes
+Redo Buffers                7606272 bytes
+Database mounted.
+
+SQL> alter database noarchivelog;
+
+Database altered.
+
+SQL> alter database open;
+
+Database altered.
+
+SQL> select name, open_mode, log_mode from v$database;
+
+NAME      OPEN_MODE            LOG_MODE
+--------- -------------------- ------------
+NTAP1DEV  READ WRITE           NOARCHIVELOG
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 NTAP1_PDB1                     MOUNTED
+         4 NTAP1_PDB2                     MOUNTED
+         5 NTAP1_PDB3                     MOUNTED
+
+SQL> alter pluggable database all open;
+
+....
+
+
+====
+
+
+== Dove trovare ulteriori informazioni
+
+Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:
+
+* Azure NetApp Files
++
+link:https://azure.microsoft.com/en-us/products/netapp["https://azure.microsoft.com/en-us/products/netapp"^]
+
+* Documentazione del software SnapCenter
++
+link:https://docs.netapp.com/us-en/snapcenter/index.html["https://docs.netapp.com/us-en/snapcenter/index.html"^]
+
+* TR-4987: Distribuzione Oracle semplificata e automatizzata su Azure NetApp Files con NFS
++
+link:../automation/automation-ora-anf-nfs.html["Procedura di distribuzione"]
+
+

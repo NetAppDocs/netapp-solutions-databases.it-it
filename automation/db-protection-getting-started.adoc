@@ -1,0 +1,281 @@
+---
+sidebar: sidebar 
+permalink: automation/db-protection-getting-started.html 
+keywords: Linux, RHEL Oracle19c, NFS, ONTAP 
+summary: Questa pagina descrive il metodo automatizzato per distribuire Oracle Data Protection sullo storage NetApp ONTAP . 
+---
+= Iniziare
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa soluzione è stata progettata per essere eseguita in un ambiente AWX/Tower.
+
+
+
+== AWX/Torre
+
+Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario della gestione del cluster ONTAP e del server Oracle (IP e nomi host), nella creazione delle credenziali, nella configurazione di un progetto che estrae il codice Ansible da NetApp Automation Github e nel modello di lavoro che avvia l'automazione.
+
+. La soluzione è stata progettata per essere eseguita in uno scenario cloud privato (da locale a locale) e cloud ibrido (da locale a cloud pubblico Cloud Volumes ONTAP [CVO])
+. Compila le variabili specifiche del tuo ambiente, quindi copiale e incollale nei campi Extra Vars nel tuo modello di lavoro.
+. Dopo aver aggiunto le variabili extra al modello di lavoro, è possibile avviare l'automazione.
+. L'automazione è impostata per essere eseguita in tre fasi (installazione, pianificazione della replica per i file binari Oracle, database, registri e pianificazione della replica solo per i registri) e una quarta fase per il ripristino del database in un sito DR.
+. Per istruzioni dettagliate su come ottenere le chiavi e i token necessari per la visita CVO Data Protectionlink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/authentication-tokens.html["Raccogli i prerequisiti per le distribuzioni CVO e Connector"^]
+
+
+
+
+== Requisiti
+
+[role="tabbed-block"]
+====
+.<strong class="big">In sede</strong>
+--
+[cols="3, 9"]
+|===
+| Ambiente | Requisiti 
+
+
+.4+| *Ambiente Ansible* | AWX/Torre 
+
+
+| Ansible v.2.10 e versioni successive 
+
+
+| Python 3 
+
+
+| Librerie Python - netapp-lib - xmltodict - jmespath 
+
+
+.3+| * ONTAP* | ONTAP versione 9.8 + 
+
+
+| Due aggregati di dati 
+
+
+| NFS vlan e ifgrp creati 
+
+
+.5+| *Server Oracle* | RHEL 7/8 
+
+
+| Oracle Linux 7/8 
+
+
+| Interfacce di rete per NFS, pubbliche e di gestione facoltativa 
+
+
+| Ambiente Oracle esistente sulla sorgente e sistema operativo Linux equivalente sulla destinazione (sito DR o cloud pubblico) 
+|===
+--
+.<strong class="big">CVO</strong>
+--
+[cols="3, 9"]
+|===
+| Ambiente | Requisiti 
+
+
+.4+| *Ambiente Ansible* | AWX/Torre 
+
+
+| Ansible v.2.10 e versioni successive 
+
+
+| Python 3 
+
+
+| Librerie Python - netapp-lib - xmltodict - jmespath 
+
+
+.3+| * ONTAP* | ONTAP versione 9.8 + 
+
+
+| Due aggregati di dati 
+
+
+| NFS vlan e ifgrp creati 
+
+
+.5+| *Server Oracle* | RHEL 7/8 
+
+
+| Oracle Linux 7/8 
+
+
+| Interfacce di rete per NFS, pubbliche e di gestione facoltativa 
+
+
+| Ambiente Oracle esistente sulla sorgente e sistema operativo Linux equivalente sulla destinazione (sito DR o cloud pubblico) 
+
+
+| Imposta lo spazio di swap appropriato sull'istanza Oracle EC2, per impostazione predefinita alcune istanze EC2 vengono distribuite con 0 swap 
+
+
+.4+| *Gestore cloud/AWS* | Chiave di accesso/segreta AWS 
+
+
+| Account NetApp Cloud Manager 
+
+
+| Token di aggiornamento di NetApp Cloud Manager 
+
+
+| Aggiungi lif intercluster di origine al gruppo di sicurezza AWS 
+|===
+--
+====
+
+
+== Dettagli di automazione
+
+[role="tabbed-block"]
+====
+.<strong class="big">In sede</strong>
+--
+Questa distribuzione automatizzata è progettata con un singolo playbook Ansible composto da tre ruoli separati.  I ruoli sono per le configurazioni ONTAP, Linux e Oracle.  La tabella seguente descrive quali attività vengono automatizzate.
+
+[cols="3, 9"]
+|===
+| Manuale di gioco | Compiti 
+
+
+.5+| *ontap_setup* | Pre-controllo dell'ambiente ONTAP 
+
+
+| Creazione di LIF intercluster sul cluster sorgente (FACOLTATIVO) 
+
+
+| Creazione di LIF intercluster sul cluster di destinazione (FACOLTATIVO) 
+
+
+| Creazione di cluster e peering SVM 
+
+
+| Creazione dello SnapMirror di destinazione e inizializzazione dei volumi Oracle designati 
+
+
+.4+| *ora_replication_cg* | Abilita la modalità di backup per ogni database in /etc/oratab 
+
+
+| Snapshot dei volumi Oracle Binary e Database 
+
+
+| Snapmirror aggiornato 
+
+
+| Disattivare la modalità di backup per ogni database in /etc/oratab 
+
+
+.3+| *ora_replication_log* | Cambia il registro corrente per ogni database in /etc/oratab 
+
+
+| Istantanea acquisita del volume Oracle Log 
+
+
+| Snapmirror aggiornato 
+
+
+.5+| *ora_recupero* | Interrompi SnapMirror 
+
+
+| Abilita NFS e crea un percorso di giunzione per i volumi Oracle sulla destinazione 
+
+
+| Configurare DR Oracle Host 
+
+
+| Montare e verificare i volumi Oracle 
+
+
+| Ripristina e avvia il database Oracle 
+|===
+--
+.<strong class="big">CVO</strong>
+--
+Questa distribuzione automatizzata è progettata con un singolo playbook Ansible composto da tre ruoli separati.  I ruoli sono per le configurazioni ONTAP, Linux e Oracle.  La tabella seguente descrive quali attività vengono automatizzate.
+
+[cols="4, 9"]
+|===
+| Manuale di gioco | Compiti 
+
+
+.7+| *cvo_setup* | Pre-controllo dell'ambiente 
+
+
+| Configurazione AWS/ID chiave di accesso AWS/Chiave segreta/Regione predefinita 
+
+
+| Creazione del ruolo AWS 
+
+
+| Creazione dell'istanza di NetApp Cloud Manager Connector in AWS 
+
+
+| Creazione dell'istanza Cloud Volumes ONTAP (CVO) in AWS 
+
+
+| Aggiungi il cluster ONTAP di origine locale a NetApp Cloud Manager 
+
+
+| Creazione dello SnapMirror di destinazione e inizializzazione dei volumi Oracle designati 
+
+
+.4+| *ora_replication_cg* | Abilita la modalità di backup per ogni database in /etc/oratab 
+
+
+| Snapshot dei volumi Oracle Binary e Database 
+
+
+| Snapmirror aggiornato 
+
+
+| Disattivare la modalità di backup per ogni database in /etc/oratab 
+
+
+.3+| *ora_replication_log* | Cambia il registro corrente per ogni database in /etc/oratab 
+
+
+| Istantanea acquisita del volume Oracle Log 
+
+
+| Snapmirror aggiornato 
+
+
+.5+| *ora_recupero* | Interrompi SnapMirror 
+
+
+| Abilita NFS e crea un percorso di giunzione per i volumi Oracle sul CVO di destinazione 
+
+
+| Configurare DR Oracle Host 
+
+
+| Montare e verificare i volumi Oracle 
+
+
+| Ripristina e avvia il database Oracle 
+|===
+--
+====
+
+
+== Parametri predefiniti
+
+Per semplificare l'automazione, abbiamo preimpostato molti parametri Oracle richiesti con valori predefiniti.  In genere non è necessario modificare i parametri predefiniti per la maggior parte delle distribuzioni.  Un utente più esperto può apportare modifiche ai parametri predefiniti con cautela.  I parametri predefiniti si trovano in ogni cartella dei ruoli nella directory defaults.
+
+
+
+== Licenza
+
+Dovresti leggere le informazioni sulla licenza come indicato nel repository Github.  Accedendo, scaricando, installando o utilizzando il contenuto di questo repository, accetti i termini della licenza stabilitilink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["Qui"^] .
+
+Si noti che esistono alcune restrizioni relative alla produzione e/o alla condivisione di lavori derivati dai contenuti di questo repository.  Si prega di assicurarsi di leggere i termini dellink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["Licenza"^] prima di utilizzare il contenuto.  Se non accetti tutti i termini, non accedere, scaricare o utilizzare i contenuti di questo repository.
+
+Quando sei pronto, cliccalink:db-protection-awx-automation.html["qui per le procedure dettagliate AWX/Tower"] .

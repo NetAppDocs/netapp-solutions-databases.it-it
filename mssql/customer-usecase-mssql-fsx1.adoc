@@ -1,0 +1,63 @@
+---
+sidebar: sidebar 
+permalink: mssql/customer-usecase-mssql-fsx1.html 
+keywords: SQL Server, WSFC, AWS, FSx ONTAP, EC2, SnapCenter 
+summary: 'Questo esempio di caso d"uso reale illustra le sfide, le soluzioni e i risultati della migrazione dei carichi di lavoro del server SQL da locale ad Amazon FSx ONTAP per ridurre i costi.' 
+---
+= Un'azienda di prodotti medicali migra il carico di lavoro SQL locale su Amazon FSx ONTAP per ridurre i costi
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Team di ingegneria delle soluzioni NetApp
+
+[role="lead"]
+Questo esempio di caso d'uso reale illustra le sfide, le soluzioni e i risultati della migrazione dei carichi di lavoro del server SQL da locale ad Amazon FSx ONTAP per ridurre i costi.
+
+
+
+== La sfida
+
+* Il cliente eseguiva carichi di lavoro del server SQL in un data center privato ospitato da una terza parte.  L'aumento dei costi di hosting era diventato un problema.
+* Mancava una conoscenza approfondita dell'architettura applicativa e dell'infrastruttura esistente a causa dell'outsourcing e dell'abbandono dei dipendenti.
+* Aveva poca o nessuna esperienza nella gestione NetApp ONTAP.
+* Si sta procedendo con una tabella di marcia serrata prima di decidere il rinnovo delle infrastrutture esistenti.
+* L'ambiente SQL Server è ampio (100 TB) e complesso, con HA tra due data center tramite SQL Always On.  Tre ambienti transitori creati da una copia di dati secondaria utilizzando AppSync e dati aggiornati quotidianamente/settimanalmente.  Modifiche dedicate ai flag dei dati richieste tramite script SQL dopo ogni aggiornamento dei dati di produzione.
+
+
+image:customer-usecase-mssql-fsx1-before.png["Questa immagine fornisce un quadro dettagliato della configurazione dell'ambiente del cliente prima della migrazione."]
+
+
+
+== La soluzione
+
+* Migrazione dall'ambiente Dell Unity SAN e AppSync ospitato in sede ad AWS Amazon FSx ONTAP con NetApp SnapCenter.
+* La funzionalità thin clone Amazon FSx ONTAP aiuta a ridurre i costi di archiviazione, mentre la gestione completamente automatizzata del ciclo di vita dei cloni SnapCenter soddisfa tutti gli altri requisiti degli ambienti transitori.
+* Database SQL Server primario distribuito su AWS EBS e copia secondaria replicata su Amazon FSx ONTAP Single-AZ.
+* PoC ha dimostrato che SnapCenter era un sostituto adatto per AppSync.
+* Partner fidati ed esperti per l'installazione, la migrazione e il supporto continuo.  Le guide dettagliate per l'implementazione delle soluzioni hanno aiutato gli utenti alle prime armi e quelli inesperti Amazon FSx ONTAP e SnapCenter .
+
+
+image:customer-usecase-mssql-fsx1-after.png["Questa immagine fornisce un quadro dettagliato della configurazione dell'ambiente del cliente dopo la migrazione."]
+
+
+
+== Il risultato
+
+* Riduzione dei costi del 40% rispetto all'hosting continuato su data center privati.
+* Servizio Amazon FSx ONTAP completamente gestito con SnapCenter per supportare 300 clienti.
+* Mantenimento della capacità di automatizzare cloni thin provisioning quasi istantanei per ambienti PreProd, UAT e QA.
+* Migrazione puntuale, riduzione dei costi di rinnovo, passaggio da un rapporto insoddisfacente con il fornitore a un'esperienza gratificante nel cloud pubblico.
+* SQL Server su Amazon FSx ha ottenuto un ulteriore livello di ridondanza dei dati mantenendo inalterate le prestazioni.
+* Possibilità di abilitare facilmente il DR interregionale in futuro.
+
+
+
+
+== Dove trovare ulteriori informazioni
+
+Per saperne di più sulle soluzioni di database aziendali NetApp , consultare il seguente sito Weblink:https://docs.netapp.com/us-en/netapp-solutions/databases/index.html["Soluzioni per database aziendali NetApp"^]

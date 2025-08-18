@@ -1,0 +1,43 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-snapcenter-usecases.html 
+summary: 'Questa soluzione fornisce ai clienti e al personale NetApp istruzioni e linee guida per la configurazione, il funzionamento e la migrazione dei database in un ambiente cloud ibrido utilizzando lo strumento basato sull"interfaccia utente grafica NetApp SnapCenter e il servizio di storage NetApp CVO nei cloud pubblici.' 
+keywords: tr-4908, tr4908, 4908, hybrid cloud, database, snapcenter, gui 
+---
+= TR-4908: Panoramica delle soluzioni di database cloud ibrido con SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Alan Cao, Felix Melligan, NetApp
+
+[role="lead"]
+Questa soluzione fornisce al personale e ai clienti NetApp istruzioni e linee guida per la configurazione, il funzionamento e la migrazione dei database in un ambiente cloud ibrido utilizzando lo strumento basato sull'interfaccia utente grafica NetApp SnapCenter e il servizio di storage NetApp CVO nei cloud pubblici per i seguenti casi d'uso:
+
+* Operazioni di sviluppo/test del database nel cloud ibrido
+* Ripristino di emergenza del database nel cloud ibrido
+
+
+Oggigiorno, molti database aziendali risiedono ancora in data center aziendali privati per motivi di prestazioni, sicurezza e/o altri motivi.  Questa soluzione di database cloud ibrido consente alle aziende di gestire i propri database primari in loco, utilizzando al contempo un cloud pubblico per le operazioni di sviluppo/test del database e per il disaster recovery, riducendo così i costi operativi e di licenza.
+
+Molti database aziendali, come Oracle, SQL Server, SAP HANA e così via, comportano costi di licenza e operativi elevati.  Molti clienti pagano una quota di licenza una tantum e costi di supporto annuali in base al numero di core di elaborazione presenti nel loro ambiente di database, indipendentemente dal fatto che i core vengano utilizzati per sviluppo, test, produzione o ripristino di emergenza.  Molti di questi ambienti potrebbero non essere sfruttati appieno durante l'intero ciclo di vita dell'applicazione.
+
+Le soluzioni offrono ai clienti la possibilità di ridurre potenzialmente il numero di core concessi in licenza spostando sul cloud i propri ambienti di database dedicati allo sviluppo, ai test o al ripristino di emergenza.  Utilizzando la scalabilità del cloud pubblico, la ridondanza, l'elevata disponibilità e un modello di fatturazione basato sul consumo, il risparmio sui costi di licenza e operatività può essere sostanziale, senza sacrificare l'usabilità o la disponibilità dell'applicazione.
+
+Oltre al potenziale risparmio sui costi delle licenze del database, il modello di licenza CVO basato sulla capacità di NetApp consente ai clienti di risparmiare sui costi di storage per GB, offrendo loro al contempo un elevato livello di gestibilità del database non disponibile nei servizi di storage concorrenti.  Il grafico seguente mostra un confronto dei costi di archiviazione dei servizi di archiviazione più diffusi disponibili nel cloud pubblico.
+
+image:cvo-cloud-cost-comparision.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
+
+Questa soluzione dimostra che, utilizzando lo strumento software basato su GUI SnapCenter e la tecnologia NetApp SnapMirror , le operazioni di database cloud ibrido possono essere facilmente configurate, implementate e gestite.
+
+I seguenti video mostrano SnapCenter in azione:
+
+* https://www.youtube.com/watch?v=-DDTVtd868Q&list=PLdXI3bZJEw7nofM6lN44eOe4aOSoryckg&index=35["Backup di un database Oracle su un cloud ibrido utilizzando SnapCenter"^]
+* https://www.youtube.com/watch?v=NpeDbhK5f4c["SnapCenter- Clona DEV/TEST su AWS Cloud per un database Oracle"^]
+
+
+In particolare, sebbene le illustrazioni presenti in questo documento mostrino CVO come istanza di storage di destinazione nel cloud pubblico, la soluzione è completamente convalidata anche per la nuova versione del motore di storage FSx ONTAP per AWS.

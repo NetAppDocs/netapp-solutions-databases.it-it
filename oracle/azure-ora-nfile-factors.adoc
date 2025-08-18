@@ -1,0 +1,130 @@
+---
+sidebar: sidebar 
+permalink: oracle/azure-ora-nfile-factors.html 
+summary: 'Questa sezione fornisce dettagli sui fattori da considerare quando si distribuisce un database Oracle su una macchina virtuale di Azure e sull"archiviazione Azure NetApp Files .' 
+keywords: database, Oracle, Azure, Azure NetApp Files 
+---
+= Fattori da considerare per la distribuzione del database Oracle
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Un cloud pubblico offre numerose opzioni per l'elaborazione e l'archiviazione e utilizzare il tipo corretto di istanza di elaborazione e motore di archiviazione è un buon punto di partenza per l'implementazione del database.  Dovresti anche selezionare configurazioni di elaborazione e archiviazione ottimizzate per i database Oracle.
+
+Nelle sezioni seguenti vengono descritte le considerazioni principali da tenere a mente quando si distribuisce un database Oracle nel cloud pubblico di Azure su un'istanza di macchina virtuale di Azure con archiviazione Azure NetApp Files .
+
+
+
+== Tipo e dimensionamento della VM
+
+Per ottenere prestazioni ottimali di un database relazionale in un cloud pubblico è importante selezionare il tipo e le dimensioni corretti della VM.  Una macchina virtuale di Azure fornisce una varietà di istanze di elaborazione che possono essere utilizzate per ospitare carichi di lavoro del database Oracle.  Consulta la documentazione Microsoftlink:https://docs.microsoft.com/en-us/azure/virtual-machines/sizes["Dimensioni per le macchine virtuali in Azure"^] per diversi tipi di macchine virtuali di Azure e il loro dimensionamento.  In generale, NetApp consiglia di utilizzare una macchina virtuale Azure generica per la distribuzione di database Oracle di piccole e medie dimensioni.  Per la distribuzione di database Oracle di dimensioni maggiori, è appropriata una VM Azure con memoria ottimizzata.  Con più RAM disponibile, è possibile configurare una cache Oracle SGA o una cache flash intelligente più grande per ridurre l'I/O fisico, il che a sua volta migliora le prestazioni del database.
+
+Azure NetApp Files funziona come un montaggio NFS collegato a una macchina virtuale di Azure, che offre una maggiore velocità effettiva e supera il limite di velocità effettiva della VM ottimizzata per l'archiviazione con archiviazione locale.  Pertanto, l'esecuzione di Oracle su Azure NetApp Files potrebbe ridurre il numero di core della CPU Oracle concedibili in licenza e i costi di licenza.  Vederelink:https://www.netapp.com/media/17105-tr4780.pdf["TR-4780: Database Oracle su Microsoft Azure"^] , Sezione 7 - Come funziona la licenza Oracle?
+
+Altri fattori da considerare sono i seguenti:
+
+* Scegliere la combinazione corretta di vCPU e RAM in base alle caratteristiche del carico di lavoro.  Con l'aumentare della dimensione della RAM sulla VM, aumenta anche il numero di core vCPU.  A un certo punto dovrebbe esserci un equilibrio, poiché le tariffe delle licenze Oracle vengono addebitate in base al numero di core vCPU.
+* Aggiungere spazio di swap a una VM.  La distribuzione predefinita della macchina virtuale di Azure non crea uno spazio di swap, il che non è ottimale per un database.
+
+
+
+
+== Prestazioni Azure NetApp Files
+
+I volumi Azure NetApp Files vengono allocati da un pool di capacità che il cliente deve predisporre nel proprio account di archiviazione Azure NetApp Files .  Ogni pool di capacità è assegnato come segue:
+
+* A un livello di servizio che definisce la capacità prestazionale complessiva.
+* La capacità di archiviazione inizialmente fornita o la suddivisione in livelli per quel pool di capacità.  Un livello di qualità del servizio (QoS) che definisce la velocità massima complessiva per spazio fornito.
+
+
+Il livello di servizio e la capacità di archiviazione inizialmente fornita determinano il livello di prestazioni per un determinato volume di database Oracle.
+
+
+
+=== 1. Livelli di servizio per Azure NetApp Files
+
+Azure NetApp Files supporta tre livelli di servizio: Ultra, Premium e Standard.
+
+* *Ultra spazio di archiviazione.*  Questo livello fornisce fino a 128 MiBps di throughput per 1 TiB di quota di volume assegnata.
+* *Archiviazione Premium.*  Questo livello fornisce fino a 64 MiBps di throughput per 1 TiB di quota di volume assegnata.
+* *Archiviazione standard.*  Questo livello fornisce fino a 16 MiBps di throughput per 1 TiB di quota di volume assegnata.
+
+
+
+
+=== 2. Capacità di accumulo e qualità del servizio
+
+A ciascuno dei livelli di servizio desiderati è associato un costo per la capacità fornita e include un livello di qualità del servizio (QoS) che definisce la velocità massima complessiva per lo spazio fornito.
+
+Ad esempio, un pool a capacità singola con provisioning da 10 TiB e livello di servizio premium fornisce una capacità effettiva complessiva disponibile per tutti i volumi in questo pool di capacità pari a 10x 64 MBps, ovvero 640 MBps con 40.000 (16 K) IOP o 80.000 (8 K) IOP.
+
+La dimensione minima del pool di capacità è 4 TiB.  È possibile modificare le dimensioni di un pool di capacità con incrementi di 1 TiB in risposta alle variazioni dei requisiti del carico di lavoro per gestire le esigenze e i costi di archiviazione.
+
+
+
+=== 3. Calcola il livello di servizio in un volume di database
+
+Il limite di throughput per un volume di database Oracle è determinato da una combinazione dei seguenti fattori: il livello di servizio del pool di capacità a cui appartiene il volume e la quota assegnata al volume.
+
+Il diagramma seguente mostra come viene calcolato il limite di throughput per un volume di database Oracle.
+
+image:db-ora-azure-anf-factors-001.png["Questa immagine illustra l'equazione applicata ai tre livelli di capacità per determinare la produttività lorda."]
+
+Nell'esempio 1, a un volume di un pool di capacità con livello di archiviazione Premium a cui sono assegnati 2 TiB di quota viene assegnato un limite di throughput di 128 MiBps (2 TiB * 64 MiBps).  Questo scenario si applica indipendentemente dalle dimensioni del pool di capacità o dal consumo di volume effettivo.
+
+Nell'esempio 2, a un volume di un pool di capacità con livello di archiviazione Premium a cui sono assegnati 100 GiB di quota viene assegnato un limite di throughput di 6,25 MiBps (0,09765625 TiB * 64 MiBps).  Questo scenario si applica indipendentemente dalle dimensioni del pool di capacità o dal consumo di volume effettivo.
+
+Si prega di notare che la dimensione minima del volume è 100 GiB.
+
+
+
+== Disposizione e impostazioni di archiviazione
+
+NetApp consiglia il seguente layout di archiviazione:
+
+* Per database di piccole dimensioni, utilizzare il layout a volume singolo per tutti i file Oracle.
++
+image:db-ora-azure-anf-factors-002.png["Questa immagine mostra tre database (DB1, DB2 e DB3), ognuno dei quali contiene file di dati, log redo, log di archivio e file di controllo, tutti all'interno di un unico pool di capacità."]
+
+* Per i database di grandi dimensioni, il layout del volume consigliato è costituito da più volumi: uno per i dati Oracle e un file di controllo duplicato e uno per il log attivo di Oracle, il log archiviato e il file di controllo.  NetApp consiglia vivamente di allocare un volume per il binario Oracle anziché l'unità locale, in modo che il database possa essere spostato su un nuovo host e ripristinato rapidamente.
++
+image:db-ora-azure-anf-factors-003.png["Questa immagine raffigura due database con due volumi ciascuno.  Il primo volume contiene i file di dati, mentre il secondo volume di ciascun database contiene i log redo, i log di archivio e i file di controllo.  Tutto all'interno di un unico bacino di capacità."]
+
+
+
+
+
+== Configurazione NFS
+
+Linux, il sistema operativo più diffuso, include funzionalità NFS native.  Oracle offre un client NFS diretto (dNFS) integrato nativamente in Oracle.  Oracle dNFS ignora la cache del sistema operativo e consente l'elaborazione parallela per migliorare le prestazioni del database.  Oracle supporta NFSv3 da oltre 20 anni, mentre NFSv4 è supportato da Oracle 12.1.0.2 e versioni successive.
+
+Utilizzando dNFS (disponibile a partire da Oracle 11g), un database Oracle in esecuzione su una macchina virtuale di Azure può gestire un I/O significativamente maggiore rispetto al client NFS nativo.  La distribuzione Oracle automatizzata tramite il toolkit di automazione NetApp configura automaticamente dNFS su NFSv3.
+
+Il diagramma seguente illustra il benchmark SLOB su Azure NetApp Files con Oracle dNFS.
+
+image:db-ora-azure-anf-factors-004.png["Questo grafico dimostra in modo significativo che dNFS migliora la latenza dei file sequenziali del DB (ms) rispetto a KNFS."]
+
+Altri fattori da considerare:
+
+* Le tabelle degli slot TCP sono l'equivalente NFS della profondità della coda dell'adattatore host-bus (HBA).  Queste tabelle controllano il numero di operazioni NFS che possono essere in sospeso in un dato momento.  Il valore predefinito è solitamente 16, che è decisamente troppo basso per prestazioni ottimali.  Il problema opposto si verifica nei kernel Linux più recenti, che possono aumentare automaticamente il limite della tabella degli slot TCP a un livello tale da saturare il server NFS di richieste.
++
+Per ottenere prestazioni ottimali e prevenire problemi di prestazioni, impostare i parametri del kernel che controllano le tabelle degli slot TCP su 128.
+
++
+[source, cli]
+----
+sysctl -a | grep tcp.*.slot_table
+----
+* Nella tabella seguente sono riportate le opzioni di montaggio NFS consigliate per una singola istanza di Linux NFSv3.
++
+image:aws-ora-fsx-ec2-nfs-001.png["Questa tabella mostra le opzioni di montaggio NFS dettagliate per i seguenti tipi di file: file di controllo, file di dati, redo log, ORACLE_HOME e ORACLE_BASE."]
+
+
+
+
+NOTE: Prima di utilizzare dNFS, verificare che siano installate le patch descritte in Oracle Doc 1495104.1.  La matrice di supporto NetApp per NFSv3 e NFSv4 non include sistemi operativi specifici.  Sono supportati tutti i sistemi operativi che rispettano l'RFC.  Quando si cerca IMT online il supporto NFSv3 o NFSv4, non selezionare un sistema operativo specifico perché non verranno visualizzate corrispondenze.  Tutti i sistemi operativi sono implicitamente supportati dalla policy generale.

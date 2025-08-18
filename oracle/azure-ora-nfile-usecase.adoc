@@ -1,0 +1,41 @@
+---
+sidebar: sidebar 
+permalink: oracle/azure-ora-nfile-usecase.html 
+summary: Questa guida alle best practice fornisce i dettagli di una soluzione per la distribuzione e la migrazione del database Oracle su Azure NetApp File Storage e Azure VM. 
+keywords: database, Oracle, Azure NetApp files, Azure 
+---
+= TR-4954: Best practice per la distribuzione e la migrazione del database Oracle per ANF
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa guida alle best practice fornisce i dettagli di una soluzione per la distribuzione e la migrazione del database Oracle su Azure NetApp File Storage e Azure VM.
+
+
+
+== Panoramica
+
+Molti database aziendali Oracle di importanza critica sono ancora ospitati in locale e molte aziende stanno cercando di migrare questi database Oracle su un cloud pubblico.  Spesso questi database Oracle sono incentrati sulle applicazioni e quindi richiedono configurazioni specifiche per l'utente, una capacità che manca in molte offerte di database-as-a-service su cloud pubblico.  Pertanto, l'attuale panorama dei database richiede una soluzione di database Oracle basata su cloud pubblico, realizzata a partire da un servizio di elaborazione e archiviazione scalabile e ad alte prestazioni, in grado di soddisfare requisiti specifici.  Le istanze di calcolo delle macchine virtuali di Azure e il servizio di archiviazione Azure NetApp Files potrebbero essere i pezzi mancanti di questo puzzle che puoi sfruttare per creare e migrare i carichi di lavoro del tuo database Oracle mission-critical su un cloud pubblico.
+
+
+
+== Macchina virtuale di Azure
+
+Le macchine virtuali di Azure sono uno dei vari tipi di risorse di elaborazione scalabili e on-demand offerte da Azure.  In genere, si sceglie una macchina virtuale quando si ha bisogno di un controllo maggiore sull'ambiente informatico rispetto alle altre opzioni.  Le macchine virtuali di Azure offrono un modo semplice e veloce per creare un computer con le configurazioni specifiche necessarie per eseguire il database Oracle, sia per carichi di lavoro ad alta intensità di elaborazione che di memoria.  Le macchine virtuali in una rete virtuale di Azure possono essere facilmente connesse alla rete della tua organizzazione, ad esempio tramite un tunnel VPN protetto.
+
+
+
+== Azure NetApp Files (ANF)
+
+Azure NetApp Files è un servizio Microsoft completamente gestito che trasferirà il carico di lavoro del tuo database nel cloud in modo più rapido e sicuro che mai.  È stato progettato per soddisfare i requisiti fondamentali dell'esecuzione di carichi di lavoro ad alte prestazioni, come i database Oracle nel cloud, e fornisce livelli di prestazioni che riflettono la gamma reale di richieste IOPS, bassa latenza, elevata disponibilità, elevata durabilità, gestibilità su larga scala e backup, ripristino e clonazione rapidi ed efficienti.  Queste funzionalità sono possibili perché Azure NetApp Files si basa su sistemi fisici NetApp ONTAP all-flash in esecuzione nell'ambiente del data center di Azure.  Azure NetApp Files è completamente integrato nei DC e nel portale di Azure e i clienti possono utilizzare la stessa comoda interfaccia grafica e le stesse API per creare e gestire file condivisi come con qualsiasi altro oggetto di Azure.  Con Azure NetApp File puoi sfruttare tutte le funzionalità di Azure senza rischi, costi o tempi aggiuntivi e affidarti all'unico servizio file aziendale nativo di Azure.
+
+
+
+== Conclusione
+
+Questa documentazione descrive in dettaglio come distribuire, configurare e migrare un database Oracle con una macchina virtuale di Azure e un servizio di archiviazione Azure NetApp Files che offre prestazioni e durabilità simili a quelle di un sistema locale.  Per indicazioni sulle migliori pratiche, vedere TR-4780link:https://www.netapp.com/media/17105-tr4780.pdf["Database Oracle su Microsoft Azure"^] .  Ancora più importante, NetApp fornisce anche toolkit di automazione che automatizzano la maggior parte delle attività necessarie per la distribuzione, la configurazione, la protezione dei dati, la migrazione e la gestione del carico di lavoro del database Oracle nel cloud pubblico di Azure.  I toolkit di automazione sono disponibili per il download sul sito GitHub pubblico NetApp :link:https://github.com/NetApp-Automation/["NetApp- Automazione"^] .

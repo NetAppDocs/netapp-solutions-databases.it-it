@@ -1,0 +1,20 @@
+---
+sidebar: sidebar 
+permalink: videos/videos-open-source-videos.html 
+summary: Serie di video e demo che illustrano le funzionalità di molte soluzioni NetApp 
+keywords: netapp, solutions, videos, demos 
+---
+= Guarda video e demo sulle soluzioni di database per database open source con NetApp
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Esplora le soluzioni di database per database open source con NetApp.
+
+.Distribuzione automatizzata di PostgreSQL, configurazione della replica HA/DR, failover, risincronizzazione
+video::c381b887-8c8b-4d7d-8b0f-b0c0010c5c04[panopto,width=360]

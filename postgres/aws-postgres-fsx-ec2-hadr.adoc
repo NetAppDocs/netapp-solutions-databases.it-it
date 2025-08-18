@@ -1,0 +1,392 @@
+---
+sidebar: sidebar 
+permalink: postgres/aws-postgres-fsx-ec2-hadr.html 
+keywords: PostgreSQL, AWS, FSx ONTAP, Database, Open Source Database 
+summary: 'La soluzione fornisce una panoramica e dettagli per la distribuzione del database PostgreSQL e la configurazione HA/DR, il failover e la risincronizzazione basati sulla tecnologia NetApp SnapMirror integrata nell"offerta di storage FSx ONTAP e sul toolkit di automazione NetApp Ansible in AWS.' 
+---
+= TR-4956: Distribuzione automatizzata di PostgreSQL ad alta disponibilità e ripristino di emergenza in AWS FSx/EC2
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Allen Cao, Niyaz Mohamed, NetApp
+
+[role="lead"]
+Questa soluzione fornisce una panoramica e dettagli per la distribuzione del database PostgreSQL e la configurazione HA/DR, il failover e la risincronizzazione basati sulla tecnologia NetApp SnapMirror integrata nell'offerta di storage FSx ONTAP e sul toolkit di automazione NetApp Ansible in AWS.
+
+
+
+== Scopo
+
+PostgreSQL è un database open source ampiamente utilizzato che è classificato al quarto posto tra i primi dieci motori di database più popolari dalink:https://db-engines.com/en/ranking["DB-Engines"^] .  Da un lato, PostgreSQL deve la sua popolarità al suo modello open source e senza licenza, pur mantenendo funzionalità sofisticate.  D'altro canto, poiché è open source, mancano linee guida dettagliate sull'implementazione di database di livello produttivo nell'ambito dell'alta disponibilità e del disaster recovery (HA/DR), in particolare nel cloud pubblico.  In generale, può essere difficile configurare un tipico sistema PostgreSQL HA/DR con standby a caldo e a caldo, replica in streaming e così via.  Testare l'ambiente HA/DR promuovendo il sito di standby e poi tornando al sito primario può avere ripercussioni negative sulla produzione.  Sono ben documentati i problemi di prestazioni sul server primario quando i carichi di lavoro di lettura vengono distribuiti in streaming hot standby.
+
+In questa documentazione, illustriamo come è possibile eliminare una soluzione HA/DR in streaming PostgreSQL a livello di applicazione e creare una soluzione HA/DR PostgreSQL basata su istanze di storage AWS FSx ONTAP e di elaborazione EC2 utilizzando la replica a livello di storage.  La soluzione crea un sistema più semplice e comparabile e fornisce risultati equivalenti se confrontati con la tradizionale replicazione in streaming a livello di applicazione PostgreSQL per HA/DR.
+
+Questa soluzione si basa sulla collaudata e matura tecnologia di replica a livello di storage NetApp SnapMirror , disponibile nello storage cloud FSX ONTAP nativo di AWS per PostgreSQL HA/DR.  È semplice da implementare con un toolkit di automazione fornito dal team NetApp Solutions.  Offre funzionalità simili eliminando al contempo la complessità e il rallentamento delle prestazioni sul sito primario con la soluzione HA/DR basata sullo streaming a livello di applicazione.  La soluzione può essere facilmente implementata e testata senza influire sul sito primario attivo.
+
+Questa soluzione affronta i seguenti casi d'uso:
+
+* Distribuzione HA/DR di livello produttivo per PostgreSQL nel cloud pubblico AWS
+* Test e convalida di un carico di lavoro PostgreSQL nel cloud pubblico AWS
+* Test e convalida di una strategia HA/DR PostgreSQL basata sulla tecnologia di replicazione NetApp SnapMirror
+
+
+
+
+== Pubblico
+
+Questa soluzione è destinata alle seguenti persone:
+
+* L'amministratore di database interessato a distribuire PostgreSQL con HA/DR nel cloud pubblico AWS.
+* L'architetto di soluzioni di database interessato a testare i carichi di lavoro PostgreSQL nel cloud pubblico AWS.
+* L'amministratore di storage interessato a distribuire e gestire istanze PostgreSQL distribuite su storage AWS FSx.
+* Il proprietario dell'applicazione interessato a creare un ambiente PostgreSQL in AWS FSx/EC2.
+
+
+
+
+== Ambiente di test e convalida della soluzione
+
+I test e la convalida di questa soluzione sono stati eseguiti in un ambiente AWS FSx ed EC2 che potrebbe non corrispondere all'ambiente di distribuzione finale. Per ulteriori informazioni, consultare la sezione <<Fattori chiave per la considerazione dell'implementazione>> .
+
+
+
+=== Architettura
+
+image:aws-postgres-fsx-ec2-architecture.png["Questa immagine fornisce un quadro dettagliato dell'organizzazione della soluzione cloud ibrida PostgreSQL, inclusi il lato locale e il sito AWS."]
+
+
+
+=== Componenti hardware e software
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+| *Hardware* 
+
+
+| Archiviazione FSx ONTAP | Versione attuale | Due coppie FSx HA nella stessa VPC e zona di disponibilità come cluster HA primario e di standby 
+
+
+| Istanza EC2 per il calcolo | t2.xlarge/4vCPU/16G | Due EC2 T2 xlarge come istanze di elaborazione primaria e di standby 
+
+
+| Controllore Ansible | VM Centos on-prem/4vCPU/8G | Una VM per ospitare il controller di automazione Ansible in locale o nel cloud 
+
+
+3+| *Software* 
+
+
+| RedHat Linux | RHEL-8.6.0_HVM-20220503-x86_64-2-Hourly2-GP2 | Abbonamento RedHat distribuito per i test 
+
+
+| Centos Linux | CentOS Linux versione 8.2.2004 (Core) | Hosting del controller Ansible distribuito nel laboratorio locale 
+
+
+| PostgreSQL | Versione 14.5 | L'automazione estrae l'ultima versione disponibile di PostgreSQL dal repository yum postgresql.ora 
+
+
+| Ansible | Versione 2.10.3 | Prerequisiti per le raccolte e le librerie richieste installate con il playbook dei requisiti 
+|===
+
+
+=== Fattori chiave per la considerazione dell'implementazione
+
+* *Backup, ripristino e recupero del database PostgreSQL.*  Un database PostgreSQL supporta diversi metodi di backup, come un backup logico tramite pg_dump, un backup online fisico con pg_basebackup o un comando di backup del sistema operativo di livello inferiore e snapshot coerenti con il livello di archiviazione.  Questa soluzione utilizza snapshot di gruppo di coerenza NetApp per il backup, il ripristino e il recupero dei dati del database PostgreSQL e dei volumi WAL nel sito di standby.  Gli snapshot del volume del gruppo di coerenza NetApp sequenziano l'I/O mentre viene scritto nello storage e proteggono l'integrità dei file di dati del database.
+* *Istanze di calcolo EC2.*  In questi test e convalide, abbiamo utilizzato il tipo di istanza AWS EC2 t2.xlarge per l'istanza di calcolo del database PostgreSQL.  NetApp consiglia di utilizzare un'istanza EC2 di tipo M5 come istanza di elaborazione per PostgreSQL nella distribuzione, perché è ottimizzata per i carichi di lavoro del database.  L'istanza di elaborazione standby deve essere sempre distribuita nella stessa zona del file system passivo (standby) distribuito per il cluster FSx HA.
+* *Distribuzione di cluster HA di storage FSx a zona singola o multizona.*  In questi test e convalide, abbiamo distribuito un cluster FSx HA in una singola zona di disponibilità AWS.  Per la distribuzione in produzione, NetApp consiglia di distribuire una coppia FSx HA in due diverse zone di disponibilità.  È possibile configurare una coppia HA di standby per il disaster recovery per la continuità aziendale in una regione diversa se è richiesta una distanza specifica tra il server primario e quello di standby.  Un cluster FSx HA viene sempre fornito in una coppia HA sincronizzata in una coppia di file system attivi-passivi per fornire ridondanza a livello di storage.
+* *Posizionamento dei dati e dei log di PostgreSQL.*  Le distribuzioni PostgreSQL tipiche condividono la stessa directory radice o gli stessi volumi per i file di dati e di registro.  Nei nostri test e nelle nostre convalide, abbiamo separato i dati e i log di PostgreSQL in due volumi separati per migliorare le prestazioni.  Un collegamento simbolico viene utilizzato nella directory dei dati per puntare alla directory dei log o al volume che ospita i log WAL di PostgreSQL e i log WAL archiviati.
+* *Timer di ritardo all'avvio del servizio PostgreSQL.*  Questa soluzione utilizza volumi montati NFS per archiviare il file del database PostgreSQL e i file di registro WAL.  Durante il riavvio dell'host del database, il servizio PostgreSQL potrebbe tentare di avviarsi mentre il volume non è montato.  Ciò provoca un errore nell'avvio del servizio di database.  Per avviare correttamente il database PostgreSQL è necessario un ritardo del timer di 10-15 secondi.
+* *RPO/RTO per la continuità aziendale.*  La replica dei dati FSx dal primario allo standby per DR si basa su ASYNC, il che significa che l'RPO dipende dalla frequenza dei backup Snapshot e della replica SnapMirror .  Una frequenza più elevata di copie Snapshot e di replica SnapMirror riduce l'RPO.  Pertanto, esiste un equilibrio tra la potenziale perdita di dati in caso di disastro e i costi di archiviazione incrementali.  Abbiamo stabilito che la copia Snapshot e la replica SnapMirror possono essere implementate in intervalli di appena 5 minuti per RPO e che PostgreSQL può essere generalmente ripristinato nel sito di standby DR in meno di un minuto per RTO.
+* *Backup del database.*  Dopo che un database PostgreSQL è stato implementato o migrato nello storage AWS FSx da un data center locale, i dati vengono sincronizzati automaticamente e replicati nella coppia FSx HA per motivi di protezione.  I dati sono ulteriormente protetti da un sito di standby replicato in caso di disastro.  Per la conservazione dei backup o la protezione dei dati a lungo termine, NetApp consiglia di utilizzare l'utilità pg_basebackup integrata in PostgreSQL per eseguire un backup completo del database che può essere trasferito nell'archiviazione BLOB S3.
+
+
+
+
+== Distribuzione della soluzione
+
+L'implementazione di questa soluzione può essere completata automaticamente utilizzando il toolkit di automazione basato su NetApp Ansible, seguendo le istruzioni dettagliate descritte di seguito.
+
+. Leggi le istruzioni nel toolkit di automazione READme.mdlink:https://github.com/NetApp-Automation/na_postgresql_aws_deploy_hadr["na_postgresql_aws_deploy_hadr"] .
+. Guarda il seguente video tutorial.
+
+
+.Distribuzione e protezione automatizzate di PostgreSQL
+video::e479b91f-eacd-46bf-bfa1-b01200f0015a[panopto]
+. Configurare i file dei parametri richiesti(`hosts` , `host_vars/host_name.yml` , `fsx_vars.yml` ) inserendo parametri specifici dell'utente nel modello nelle sezioni pertinenti.  Quindi utilizzare il pulsante Copia per copiare i file sull'host del controller Ansible.
+
+
+
+
+=== Prerequisiti per la distribuzione automatizzata
+
+Per la distribuzione sono richiesti i seguenti prerequisiti.
+
+. È stato configurato un account AWS e sono stati creati i segmenti di rete e VPC necessari all'interno del tuo account AWS.
+. Dalla console AWS EC2, è necessario distribuire due istanze EC2 Linux, una come server DB PostgreSQL primario nel sito DR primario e una nel sito DR di standby.  Per la ridondanza di elaborazione nei siti DR primario e di standby, distribuire due istanze EC2 Linux aggiuntive come server DB PostgreSQL di standby.  Per maggiori dettagli sulla configurazione dell'ambiente, consultare il diagramma dell'architettura nella sezione precedente.  Rivedere anche illink:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html["Guida utente per istanze Linux"] per maggiori informazioni.
+. Dalla console AWS EC2, distribuisci due cluster HA di storage FSx ONTAP per ospitare i volumi del database PostgreSQL.  Se non hai familiarità con la distribuzione dell'archiviazione FSx, consulta la documentazionelink:https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/creating-file-systems.html["Creazione di file system FSx ONTAP"] per istruzioni dettagliate.
+. Creare una VM Centos Linux per ospitare il controller Ansible.  Il controller Ansible può essere installato in locale o nel cloud AWS.  Se si trova in locale, è necessario disporre di connettività SSH alla VPC, alle istanze EC2 Linux e ai cluster di archiviazione FSx.
+. Configurare il controller Ansible come descritto nella sezione "Configurare il nodo di controllo Ansible per le distribuzioni CLI su RHEL/CentOS" dalla risorsalink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["Introduzione all'automazione delle soluzioni NetApp"^] .
+. Clonare una copia del toolkit di automazione dal sito pubblico NetApp GitHub.
+
+
+[source, cli]
+----
+git clone https://github.com/NetApp-Automation/na_postgresql_aws_deploy_hadr.git
+----
+. Dalla directory radice del toolkit, eseguire i playbook prerequisiti per installare le raccolte e le librerie richieste per il controller Ansible.
+
+
+[source, cli]
+----
+ansible-playbook -i hosts requirements.yml
+----
+[source, cli]
+----
+ansible-galaxy collection install -r collections/requirements.yml --force --force-with-deps
+----
+. Recupera i parametri dell'istanza EC2 FSx richiesti per il file delle variabili host del DB `host_vars/*` e il file delle variabili globali `fsx_vars.yml` configurazione.
+
+
+
+
+=== Configurare il file hosts
+
+Inserire l'IP di gestione del cluster FSx ONTAP primario e i nomi host delle istanze EC2 nel file hosts.
+
+....
+# Primary FSx cluster management IP address
+[fsx_ontap]
+172.30.15.33
+....
+....
+# Primary PostgreSQL DB server at primary site where database is initialized at deployment time
+[postgresql]
+psql_01p ansible_ssh_private_key_file=psql_01p.pem
+....
+....
+# Primary PostgreSQL DB server at standby site where postgresql service is installed but disabled at deployment
+# Standby DB server at primary site, to setup this server comment out other servers in [dr_postgresql]
+# Standby DB server at standby site, to setup this server comment out other servers in [dr_postgresql]
+[dr_postgresql] --
+psql_01s ansible_ssh_private_key_file=psql_01s.pem
+#psql_01ps ansible_ssh_private_key_file=psql_01ps.pem
+#psql_01ss ansible_ssh_private_key_file=psql_01ss.pem
+....
+
+
+=== Configurare il file host_name.yml nella cartella host_vars
+
+[source, shell]
+----
+# Add your AWS EC2 instance IP address for the respective PostgreSQL server host
+ansible_host: "10.61.180.15"
+
+# "{{groups.postgresql[0]}}" represents first PostgreSQL DB server as defined in PostgreSQL hosts group [postgresql]. For concurrent multiple PostgreSQL DB servers deployment, [0] will be incremented for each additional DB server. For example,  "{{groups.posgresql[1]}}" represents DB server 2, "{{groups.posgresql[2]}}" represents DB server 3 ... As a good practice and the default, two volumes are allocated to a PostgreSQL DB server with corresponding /pgdata, /pglogs mount points, which store PostgreSQL data, and PostgreSQL log files respectively. The number and naming of DB volumes allocated to a DB server must match with what is defined in global fsx_vars.yml file by src_db_vols, src_archivelog_vols parameters, which dictates how many volumes are to be created for each DB server. aggr_name is aggr1 by default. Do not change. lif address is the NFS IP address for the SVM where PostgreSQL server is expected to mount its database volumes. Primary site servers from primary SVM and standby servers from standby SVM.
+host_datastores_nfs:
+  - {vol_name: "{{groups.postgresql[0]}}_pgdata", aggr_name: "aggr1", lif: "172.21.94.200", size: "100"}
+  - {vol_name: "{{groups.postgresql[0]}}_pglogs", aggr_name: "aggr1", lif: "172.21.94.200", size: "100"}
+
+# Add swap space to EC2 instance, that is equal to size of RAM up to 16G max. Determine the number of blocks by dividing swap size in MB by 128.
+swap_blocks: "128"
+
+# Postgresql user configurable parameters
+psql_port: "5432"
+buffer_cache: "8192MB"
+archive_mode: "on"
+max_wal_size: "5GB"
+client_address: "172.30.15.0/24"
+----
+
+
+=== Configurare il file globale fsx_vars.yml nella cartella vars
+
+[source, shell]
+----
+########################################################################
+######  PostgreSQL HADR global user configuration variables       ######
+######  Consolidate all variables from FSx, Linux, and postgresql ######
+########################################################################
+
+###########################################
+### Ontap env specific config variables ###
+###########################################
+
+####################################################################################################
+# Variables for SnapMirror Peering
+####################################################################################################
+
+#Passphrase for cluster peering authentication
+passphrase: "xxxxxxx"
+
+#Please enter destination or standby FSx cluster name
+dst_cluster_name: "FsxId0cf8e0bccb14805e8"
+
+#Please enter destination or standby FSx cluster management IP
+dst_cluster_ip: "172.30.15.90"
+
+#Please enter destination or standby FSx cluster inter-cluster IP
+dst_inter_ip: "172.30.15.13"
+
+#Please enter destination or standby SVM name to create mirror relationship
+dst_vserver: "dr"
+
+#Please enter destination or standby SVM management IP
+dst_vserver_mgmt_lif: "172.30.15.88"
+
+#Please enter destination or standby SVM NFS lif
+dst_nfs_lif: "172.30.15.88"
+
+#Please enter source or primary FSx cluster name
+src_cluster_name: "FsxId0cf8e0bccb14805e8"
+
+#Please enter source or primary FSx cluster management IP
+src_cluster_ip: "172.30.15.20"
+
+#Please enter source or primary FSx cluster inter-cluster IP
+src_inter_ip: "172.30.15.5"
+
+#Please enter source or primary SVM name to create mirror relationship
+src_vserver: "prod"
+
+#Please enter source or primary SVM management IP
+src_vserver_mgmt_lif: "172.30.15.115"
+
+#####################################################################################################
+# Variable for PostgreSQL Volumes, lif - source or primary FSx NFS lif address
+#####################################################################################################
+
+src_db_vols:
+  - {vol_name: "{{groups.postgresql[0]}}_pgdata", aggr_name: "aggr1", lif: "172.21.94.200", size: "100"}
+
+src_archivelog_vols:
+  - {vol_name: "{{groups.postgresql[0]}}_pglogs", aggr_name: "aggr1", lif: "172.21.94.200", size: "100"}
+
+#Names of the Nodes in the ONTAP Cluster
+nfs_export_policy: "default"
+
+#####################################################################################################
+### Linux env specific config variables ###
+#####################################################################################################
+
+#NFS Mount points for PostgreSQL DB volumes
+mount_points:
+  - "/pgdata"
+  - "/pglogs"
+
+#RedHat subscription username and password
+redhat_sub_username: "xxxxx"
+redhat_sub_password: "xxxxx"
+
+####################################################
+### DB env specific install and config variables ###
+####################################################
+#The latest version of PostgreSQL RPM is pulled/installed and config file is deployed from a preconfigured template
+#Recovery type and point: default as all logs and promote and leave all PITR parameters blank
+----
+
+
+=== Distribuzione PostgreSQL e configurazione HA/DR
+
+Le seguenti attività distribuiscono il servizio server DB PostgreSQL e inizializzano il database nel sito primario sull'host server DB EC2 primario.  Un host server DB EC2 primario di standby viene quindi configurato nel sito di standby.  Infine, la replica del volume DB viene impostata dal cluster FSx del sito primario al cluster FSx del sito di standby per il ripristino di emergenza.
+
+. Creare volumi DB sul cluster FSx primario e configurare PostgreSQL sull'host dell'istanza EC2 primaria.
++
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_deploy.yml -u ec2-user --private-key psql_01p.pem -e @vars/fsx_vars.yml
+----
+. Configurare l'host dell'istanza EC2 DR in standby.
++
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_standby_setup.yml -u ec2-user --private-key psql_01s.pem -e @vars/fsx_vars.yml
+----
+. Impostare il peering del cluster FSx ONTAP e la replica del volume del database.
++
+[source, cli]
+----
+ansible-playbook -i hosts fsx_replication_setup.yml -e @vars/fsx_vars.yml
+----
+. Consolidare i passaggi precedenti in un'unica fase di distribuzione PostgreSQL e configurazione HA/DR.
++
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_hadr_setup.yml -u ec2-user -e @vars/fsx_vars.yml
+----
+. Per impostare un host DB PostgreSQL di standby nel sito primario o in quello di standby, commentare tutti gli altri server nella sezione [dr_postgresql] del file hosts e quindi eseguire il playbook postgresql_standby_setup.yml con il rispettivo host di destinazione (ad esempio psql_01ps o l'istanza di elaborazione EC2 di standby nel sito primario).  Assicurarsi che un file di parametri host come `psql_01ps.yml` è configurato sotto il `host_vars` elenco.
++
+[source, cli]
+----
+[dr_postgresql] --
+#psql_01s ansible_ssh_private_key_file=psql_01s.pem
+psql_01ps ansible_ssh_private_key_file=psql_01ps.pem
+#psql_01ss ansible_ssh_private_key_file=psql_01ss.pem
+----
+
+
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_standby_setup.yml -u ec2-user --private-key psql_01ps.pem -e @vars/fsx_vars.yml
+----
+
+
+=== Backup e replica degli snapshot del database PostgreSQL sul sito di standby
+
+Il backup e la replica degli snapshot del database PostgreSQL sul sito di standby possono essere controllati ed eseguiti sul controller Ansible con un intervallo definito dall'utente.  Abbiamo verificato che l'intervallo può essere anche solo di 5 minuti.  Pertanto, in caso di errore nel sito primario, si verificano 5 minuti di potenziale perdita di dati se l'errore si verifica subito prima del successivo backup snapshot pianificato.
+
+[source, cli]
+----
+*/15 * * * * /home/admin/na_postgresql_aws_deploy_hadr/data_log_snap.sh
+----
+
+
+=== Failover sul sito di standby per DR
+
+Per testare il sistema PostgreSQL HA/DR come esercizio di DR, eseguire il failover e il ripristino del database PostgreSQL sull'istanza primaria del database EC2 in standby sul sito in standby eseguendo il seguente playbook.  In uno scenario di DR effettivo, eseguire la stessa operazione per un failover effettivo sul sito DR.
+
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_failover.yml -u ec2-user --private-key psql_01s.pem -e @vars/fsx_vars.yml
+----
+
+
+=== Risincronizza i volumi DB replicati dopo il test di failover
+
+Eseguire la risincronizzazione dopo il test di failover per ristabilire la replica SnapMirror del volume del database.
+
+[source, cli]
+----
+ansible-playbook -i hosts postgresql_standby_resync.yml -u ec2-user --private-key psql_01s.pem -e @vars/fsx_vars.yml
+----
+
+
+=== Failover dal server DB EC2 primario al server DB EC2 di standby a causa di un errore dell'istanza di elaborazione EC2
+
+NetApp consiglia di eseguire il failover manuale o di utilizzare un clusterware del sistema operativo consolidato che potrebbe richiedere una licenza.
+
+
+
+== Dove trovare ulteriori informazioni
+
+Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:
+
+* Amazon FSx ONTAP
+
+
+link:https://aws.amazon.com/fsx/netapp-ontap/["https://aws.amazon.com/fsx/netapp-ontap/"^]
+
+* Amazon EC2
+
+
+link:https://aws.amazon.com/pm/ec2/?trk=36c6da98-7b20-48fa-8225-4784bced9843&sc_channel=ps&s_kwcid=AL!4422!3!467723097970!e!!g!!aws%20ec2&ef_id=Cj0KCQiA54KfBhCKARIsAJzSrdqwQrghn6I71jiWzSeaT9Uh1-vY-VfhJixF-xnv5rWwn2S7RqZOTQ0aAh7eEALw_wcB:G:s&s_kwcid=AL!4422!3!467723097970!e!!g!!aws%20ec2["https://aws.amazon.com/pm/ec2/?trk=36c6da98-7b20-48fa-8225-4784bced9843&sc_channel=ps&s_kwcid=AL!4422!3!467723097970!e!!g!!aws%20ec2&ef_id=Cj0KCQiA54KfBhCKARIsAJzSrdqwQrghn6I71jiWzSeaT9Uh1-vY-VfhJixF-xnv5rWwn2S7RqZOTQ0aAh7eEALw_wcB:G:s&s_kwcid=AL!4422!3!467723097970!e!!g!!aws%20ec2"^]
+
+* Automazione delle soluzioni NetApp
+
+
+link:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Introduzione"^]

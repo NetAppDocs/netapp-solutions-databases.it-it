@@ -1,0 +1,52 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-prereq.html 
+summary: Prima di eseguire carichi di lavoro di database cloud ibridi, è necessario configurare determinati prerequisiti sia in locale che nel cloud.  La sezione seguente fornisce un riepilogo di alto livello di questo processo e i seguenti link forniscono ulteriori informazioni sulla configurazione di sistema necessaria. 
+keywords: workflow, prerequisites, licensing, networking, security 
+---
+= Configurazione dei prerequisiti
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Prima di eseguire carichi di lavoro di database cloud ibridi, è necessario configurare determinati prerequisiti sia in locale che nel cloud.  La sezione seguente fornisce un riepilogo di alto livello di questo processo e i seguenti link forniscono ulteriori informazioni sulla configurazione di sistema necessaria.
+
+
+
+== In loco
+
+* Installazione e configurazione SnapCenter
+* Configurazione dell'archiviazione del server di database locale
+* Requisiti di licenza
+* Rete e sicurezza
+* Automazione
+
+
+
+
+== Cloud pubblico
+
+* Un accesso a NetApp Cloud Central
+* Accesso alla rete da un browser web a più endpoint
+* Una posizione di rete per un connettore
+* Autorizzazioni del provider cloud
+* Networking per servizi individuali
+
+
+Considerazioni importanti:
+
+. Dove distribuire Cloud Manager Connector?
+. Dimensionamento e architettura di Cloud Volume ONTAP
+. Nodo singolo o alta disponibilità?
+
+
+Per ulteriori dettagli, consultare i seguenti link:
+
+link:hybrid-dbops-sc-prereq-onprem.html["In sede"]
+
+link:hybrid-dbops-sc-prereq-cloud.html["Cloud pubblico"]

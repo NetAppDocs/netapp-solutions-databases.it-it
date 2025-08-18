@@ -1,0 +1,106 @@
+= 
+:allow-uri-read: 
+
+
+. Configurare le credenziali.
+. Creare tipi di credenziali. Per le soluzioni che coinvolgono ONTAP, è necessario configurare il tipo di credenziale in modo che corrisponda alle voci di nome utente e password; aggiungeremo anche voci per Cloud Central e AWS.
++
+.. Vai su Amministrazione → Tipi di credenziali e fai clic su Aggiungi.
+.. Fornire il nome e la descrizione.
+.. Incolla il seguente contenuto nella Configurazione di input:
++
+[source, cli]
+----
+fields:
+  - id: dst_cluster_username
+    type: string
+    label: CVO Username
+  - id: dst_cluster_password
+    type: string
+    label: CVO Password
+    secret: true
+  - id: cvo_svm_password
+    type: string
+    label: CVO SVM Password
+    secret: true
+  - id: src_cluster_username
+    type: string
+    label: Source Cluster Username
+  - id: src_cluster_password
+    type: string
+    label: Source Cluster Password
+    secret: true
+  - id: regular_id
+    type: string
+    label: Cloud Central ID
+    secret: true
+  - id: email_id
+    type: string
+    label: Cloud Manager Email
+    secret: true
+  - id: cm_password
+    type: string
+    label: Cloud Manager Password
+    secret: true
+  - id: access_key
+    type: string
+    label: AWS Access Key
+    secret: true
+  - id: secret_key
+    type: string
+    label: AWS Secret Key
+    secret: true
+  - id: token
+    type: string
+    label: Cloud Central Refresh Token
+    secret: true
+----
+.. Incolla il seguente contenuto nella configurazione dell'iniettore e fai clic su Salva:
++
+[source, cli]
+----
+extra_vars:
+  dst_cluster_username: '{{ dst_cluster_username }}'
+  dst_cluster_password: '{{ dst_cluster_password }}'
+  cvo_svm_password: '{{ cvo_svm_password }}'
+  src_cluster_username: '{{ src_cluster_username }}'
+  src_cluster_password: '{{ src_cluster_password }}'
+  regular_id: '{{ regular_id }}'
+  email_id: '{{ email_id }}'
+  cm_password: '{{ cm_password }}'
+  access_key: '{{ access_key }}'
+  secret_key: '{{ secret_key }}'
+  token: '{{ token }}'
+----
+
+
+. Crea credenziali per ONTAP/CVO/AWS
++
+.. Vai su Risorse → Credenziali e fai clic su Aggiungi.
+.. Inserisci il nome e i dettagli dell'organizzazione per le credenziali ONTAP
+.. Selezionare il tipo di credenziale creato nel passaggio precedente.
+.. In Dettagli tipo, inserisci il nome utente e la password per i cluster di origine e CVO, Cloud Central/Manager, la chiave di accesso/segreta AWS e il token di aggiornamento Cloud Central.
+.. Fare clic su Salva
+
+
+. Crea credenziali per Oracle (fonte)
++
+.. Vai su Risorse → Credenziali e fai clic su Aggiungi.
+.. Inserisci il nome e i dettagli dell'organizzazione per l'host Oracle
+.. Selezionare il tipo di credenziale Macchina.
+.. In Dettagli tipo, immettere il nome utente e la password per gli host Oracle.
+.. Selezionare il metodo di escalation dei privilegi corretto e immettere nome utente e password.
+.. Fare clic su Salva
+
+
+. Crea credenziali per la destinazione Oracle
++
+.. Vai su Risorse → Credenziali e fai clic su Aggiungi.
+.. Immettere il nome e i dettagli dell'organizzazione per l'host Oracle DR
+.. Selezionare il tipo di credenziale Macchina.
+.. In Dettagli tipo, inserisci il nome utente (ec2-user o se lo hai modificato rispetto al valore predefinito inseriscilo) e la chiave privata SSH
+.. Selezionare il metodo di escalation dei privilegi corretto (sudo) e immettere il nome utente e la password, se necessario.
+.. Fare clic su Salva
+
+
+
