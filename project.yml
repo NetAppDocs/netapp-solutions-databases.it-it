@@ -184,6 +184,9 @@ sidebar:
         url: "/mssql/sql-srv-anf-conclusion.html"
       - title: Dove trovare ulteriori informazioni
         url: "/mssql/sql-srv-anf-add-info.html"
+    - title: SQL Server Always On con Google Cloud NetApp Volumes
+      pdf-filename: SQL Server Always On con Google Cloud NetApp Volumes
+      url: "/mssql/gcnv-sql-aoag-setup.html"
     - title: SAP con Microsoft SQL Server su Windows utilizzando Clustered Data ONTAP
       pdf-filename: SAP con Microsoft SQL Server su Windows utilizzando Clustered
         Data ONTAP
