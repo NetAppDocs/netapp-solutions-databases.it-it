@@ -58,6 +58,8 @@ indexpage:
       url: "/mssql/sql-aws-ec2.html"
     - title: Eseguire SQL Server su Azure NetApp Files
       url: "/mssql/sql-srv-anf-overview.html"
+    - title: Esegui SQL Server su Google Cloud NetApp Volumes
+      url: "/mssql/gcnv-sql-aoag-setup.html"
     - title: Migrazione del carico di lavoro SQL on-prem su FSx ONTAP
       url: "/mssql/customer-usecase-mssql-fsx1.html"
     - title: SAP con Microsoft SQL Server su Windows utilizzando Clustered Data ONTAP
