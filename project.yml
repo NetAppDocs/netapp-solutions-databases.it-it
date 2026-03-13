@@ -101,6 +101,11 @@ sidebar:
           url: "/oracle/azure-ora-nfile-migration.html"
     - title: Google Cloud
       entries:
+      - title: Distribuzione di istanza standalone Oracle su Google NetApp Volumes
+          con NFS
+        pdf-filename: Distribuzione di istanze Oracle standalone su Google NetApp
+          Volumes tramite NFS
+        url: "/oracle/gcp-ora-gcnv-si-nfs.html"
       - title: Ottimizza il backup e il ripristino di Oracle VLDB con l'unione incrementale
           in-server su Google Cloud NetApp Volumes
         pdf-filename: Ottimizza il backup e il ripristino di Oracle VLDB con l'unione

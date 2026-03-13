@@ -71,7 +71,7 @@ Per ottenere prestazioni ottimali e prevenire problemi di prestazioni, regolare 
 ----
 sysctl -a | grep tcp.*.slot_table
 ----
-* Nella tabella seguente sono riportate le opzioni di montaggio NFS consigliate per Linux NFSv3 - istanza singola.
+* La tabella seguente fornisce le opzioni di montaggio NFS consigliate per Linux - istanza singola.
 +
 image:aws-ora-fsx-ec2-nfs-001.png["Figura che mostra il dialogo di input/output o che rappresenta il contenuto scritto"]
 

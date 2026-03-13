@@ -26,4 +26,5 @@ L'obiettivo di questa documentazione è fornire processi, procedure e indicazion
 
 Per saperne di più sulla soluzione e sul caso d'uso, guarda il seguente video riassuntivo:
 
-link:https://www.netapp.tv/insight/details/30000?playlist_id=275&mcid=04891225598830484314259903524057913910["Modernizza il tuo database Oracle con il cloud ibrido in AWS e FSx ONTAP, Parte 1 - Caso d'uso e architettura della soluzione"^]
+.Modernizza il tuo database Oracle con il cloud ibrido in AWS e FSx ONTAP, Parte 1 - Caso d'uso e architettura della soluzione
+video::b1a7bb05-caea-44a0-bd9a-b01200f372e9[panopto,width=360]
