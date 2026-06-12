@@ -1,0 +1,1760 @@
+---
+sidebar: sidebar 
+permalink: oracle/gcnv-oracle-deployment.html 
+keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, high availability, disaster recovery, google compute engine 
+summary: 'Implementa l"alta disponibilità di Oracle Database 26ai su Google Compute Engine utilizzando Google Cloud NetApp Volumes con storage a blocchi iSCSI. Questa guida mostra come effettuare il provisioning di istanze di calcolo e storage, installare Oracle Grid Infrastructure e Oracle Database, inizializzare un database standby e configurare Oracle Data Guard con Fast-Start Failover.' 
+---
+= Implementa l'alta disponibilità del database Oracle 26ai con Google Cloud NetApp Volumes
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Questa guida mostra come effettuare il provisioning di istanze di calcolo e storage, installare Oracle Grid Infrastructure e Oracle Database, inizializzare un database standby e configurare Oracle Data Guard con Fast-Start Failover.
+
+
+
+== Prima di iniziare
+
+Prima di iniziare, assicurati di avere a disposizione quanto segue:
+
+* Un progetto Google Cloud con autorizzazioni per Compute Engine, rete VPC, configurazione firewall, IAM e NetApp Volumes
++
+[cols="1,2"]
+|===
+| Attività | Accesso richiesto 
+
+
+| Creare macchine virtuali Compute Engine | Amministratore dell'istanza di calcolo (o equivalente) 
+
+
+| Firewall / Criteri del firewall | Amministratore di rete o amministratore delegato delle policy 
+
+
+| Creare pool e volumi GCNV | Amministratore di NetApp Volumes 
+
+
+| Configura PSA | Amministratore di rete nel progetto host 
+
+
+| SSH tramite IAP | Accesso tramite tunnel protetto da IAP + login del sistema operativo (se utilizzato) 
+|===
+* L'NetApp Volumes API abilitata
+* Una VPC e una sottorete configurate per la regione di destinazione
+* Accesso ai servizi privati (PSA) configurato per Google Cloud NetApp Volumes
+* Oracle Linux 10 per tutte le macchine virtuali necessarie
+* La risoluzione DNS e del nome host è configurata per gli host del database e per l'host Observer
+* Supporti di installazione e file di patch disponibili per Oracle Database 26ai e Grid Infrastructure
+* Conoscenza di Oracle Data Guard, Oracle Restart e dei concetti di storage iSCSI
+* La sincronizzazione dell'ora è configurata per tutte le macchine virtuali.
++
+È possibile utilizzare i seguenti comandi:
+
++
+[source, bash]
+----
+gcloud services enable netapp.googleapis.com
+chronyc tracking
+timedatectl
+----
+
+
+
+
+== Esempio di configurazione utilizzato in questa guida
+
+Questa guida si basa sui seguenti presupposti di implementazione:
+
+* Tre macchine virtuali Google Compute Engine:
++
+** `oracdb1` per il database primario
+** `oracdb2` per il database standby
+** `oradg-obs` per l'osservatore di failover ad avvio rapido
+
+
+* Un pool di storage GCNV Flex Unified per zona di database
+* Cinque volumi iSCSI GCNV per host di database
+* Oracle Data Guard Broker e Fast-Start Failover per il failover automatico
+* Storage dedicato per ogni host del database; gli host primario e di standby non condividono i volumi iSCSI
+
+
+Sostituisci tutti i valori di esempio nei comandi con i valori del tuo ambiente, inclusi nomi host, indirizzi IP, zone, nomi di progetto, indirizzi IP del portale, password e nomi dei file multimediali Oracle.
+
+
+
+== Obiettivi
+
+In questa procedura, completi le seguenti attività:
+
+* Effettua il provisioning delle istanze di Compute Engine per il database primario, il database standby e l'Observer
+* Configura lo storage iSCSI GCNV e i dispositivi multipath per Oracle
+* Installare Oracle Grid Infrastructure e Oracle Database 26ai su entrambi gli host del database
+* Creare il database Oracle primario
+* Inizializza il database standby utilizzando la replica GCNV, snapshot o cloni
+* Configurare Oracle Data Guard Broker, Fast-Start Failover e Observer
+
+
+
+
+== Opzioni di implementazione
+
+Questa sezione confronta i modelli pratici di implementazione HA/DR per Oracle Database su Google Compute Engine (GCE) con Google Cloud NetApp Volumes (GCNV) storage a blocchi iSCSI. Evidenzia inoltre come la replica GCNV acceleri l'inizializzazione dello standby. Utilizza questa matrice per scegliere un livello prima di iniziare. Questa guida implementa Prod HA (Data Guard + FSFO) — la riga inferiore.
+
+[cols="1,1,1,1,1,1,1"]
+|===
+| Ambiente | Requisito | Architettura consigliata | HA | DR | Automazione | Vantaggio principale 
+
+
+| Sviluppo/Test | Costo più basso | Istanza singola | No | Sì | No | Clone Snapshot 
+
+
+| Prod Basic (Riavvio) | Riduci i tempi di inattività dovuti ai crash | + Oracle Restart | No | Sì | Solo locale | Riavvio automatico 
+
+
+| Prod HA (senza DG) | Manual DR accettabile | + Snapshot / RMAN | Parziale | Sì | Parziale | recupero del clone GCNV 
+
+
+| Prod HA (DG + FSFO) | Vera alta disponibilità (senza DBA) | Data Guard + FSFO | Sì | Sì | Completo | Vera alta disponibilità + failover rapido 
+|===
+*HA / DR / Automazione:* Sì = soddisfa l'obiettivo di livello; No = non rientra nell'ambito; Parziale = solo a livello di storage o con passaggi manuali.
+
+
+
+== Sezioni da leggere per il tuo livello
+
+A seconda del livello di HA che si desidera raggiungere, leggere le sezioni della matrice sottostante. Ad esempio, se si desidera Prod HA con Data Guard e FSFO, leggere tutte le sezioni. Se si desidera Dev/Test o Prod Basic con Restart, leggere solo la prima colonna.
+
+[cols="1a,1a,1a"]
+|===
+| Dev/Test o Prod Basic (riavvio) | Prod HA (senza Data Guard) | Prod HA (Data Guard + FSFO) 
+
+
+ a| 
+<<prerequisites,Prima di iniziare>>
+
+<<example-configuration,Esempio di configurazione utilizzato in questa guida>>
+
+<<objectives,Obiettivi>>
+
+<<deployment-options,Opzioni di implementazione>>
+
+<<overview,Panoramica>>
+
+<<architecture,Architettura>>
+
+<<provision-compute-engine,Provisioning di Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provisioning dei volumi iSCSI GCNV>>
+
+<<install-oracle-software,Installare il software Oracle>>
+
+<<create-primary-database,Creare il database primario>>
+ a| 
+<<prerequisites,Prima di iniziare>>
+
+<<example-configuration,Esempio di configurazione utilizzato in questa guida>>
+
+<<objectives,Obiettivi>>
+
+<<deployment-options,Opzioni di implementazione>>
+
+<<overview,Panoramica>>
+
+<<architecture,Architettura>>
+
+<<provision-compute-engine,Provisioning di Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provisioning dei volumi iSCSI GCNV>>
+
+<<install-oracle-software,Installare il software Oracle>>
+
+<<create-primary-database,Creare il database primario>>
+
+<<create-standby-database,Creare il database standby>> (tramite <<gcnv-standby-initialization,Passaggio 3: Inizializzazione dello standby GCNV>> solo)
+ a| 
+<<prerequisites,Prima di iniziare>>
+
+<<example-configuration,Esempio di configurazione utilizzato in questa guida>>
+
+<<objectives,Obiettivi>>
+
+<<deployment-options,Opzioni di implementazione>>
+
+<<overview,Panoramica>>
+
+<<architecture,Architettura>>
+
+<<provision-compute-engine,Provisioning di Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provisioning dei volumi iSCSI GCNV>>
+
+<<install-oracle-software,Installare il software Oracle>>
+
+<<create-primary-database,Creare il database primario>>
+
+<<create-standby-database,Creare il database standby>>
+
+<<broker-fsfo-observer,Configurare Data Guard Broker, FSFO e Observer>>
+
+|===
+
+
+== Panoramica
+
+Questa architettura implementa l'alta disponibilità di Oracle Database 26ai su Google Cloud utilizzando Google Cloud NetApp Volumes (GCNV) storage iSCSI e Oracle Data Guard. GCNV offre storage a blocchi dalle performance elevate e supporta l'inizializzazione dello standby a livello di storage. Data Guard fornisce sincronizzazione continua, switchover e Fast-Start Failover.
+
+[cols="1,2"]
+|===
+| Strato | Ruolo 
+
+
+| GCNV | Storage a blocchi, inizializzazione dello standby, replica dello storage 
+
+
+| Data Guard | Sincronizzazione continua, applicazione del redo, commutazione, FSFO 
+|===
+La replica GCNV riduce significativamente i tempi di inizializzazione dello standby rispetto alla funzione di duplicazione attiva RMAN, spostando i dati a livello di storage anziché attraverso i canali del database Oracle. Preferisci la replica GCNV per il seeding dello standby in produzione quando il tuo ambiente lo supporta.
+
+[cols="1,3"]
+|===
+| Componente | Dettaglio 
+
+
+| Host DB | `oracdb1`/ `oracdb2` — zone diverse, cinque volumi iSCSI GCNV ciascuno 
+
+
+| Storage | `/u01` + ASM `+DATA`, `+RECO`, `+FRA` su GCNV (ESTERNO) 
+
+
+| Inizializzazione standby | GCNV replica / snapshot / clone → Oracle finalizza → Data Guard 
+
+
+| HA | Riavvio, standby fisico (MONTATO), Broker, FSFO, Observer (`oradg-obs`) 
+
+
+| App | Servizio `orclapp` 
+|===
+*Zonizzazione:* Un pool GCNV Flex Unified per zona di database; volumi dedicati per host. I dischi di avvio sono solo per il sistema operativo. *Escluso dall'ambito:* TDE, RAC, NVMe/TCP, OEM, Active Data Guard (lo standby rimane *MOUNTED*).
+
+
+
+== Architettura
+
+
+
+=== Diagramma di riferimento
+
+L'architettura prevede tre percorsi dati indipendenti. La replica dello storage e il trasporto dei redo di Data Guard sono percorsi separati.
+
+.Implementazione Oracle GCNV - architettura di riferimento
+image::oracle-26ai-ha.png[Oracle 26ai HA su GCNV - architettura di riferimento]
+
+*Replica dello storage ≠ replica del redo log.* Il percorso 1 sposta i file di dati a livello GCNV per l'inizializzazione dello standby. Il percorso 2 mantiene i database sincronizzati dopo cutover. Il percorso 3 orchestra le transizioni di ruolo e il failover automatico tramite Oracle Data Guard Broker e Observer.
+
+
+
+=== Ruoli della piattaforma
+
+[cols="1,3"]
+|===
+| Piattaforma | Consegna 
+
+
+| GCNV | Volumi iSCSI, snapshot, replica dei volumi (baseline + incrementali) — inizializzazione dello standby 
+
+
+| Data Guard | Redo transport, MRP, Broker, FSFO — sincronizzazione continua e failover 
+|===
+La replica GCNV esegue una copia di base, quindi aggiornamenti incrementali a blocchi secondo policy. Data Guard gestisce redo apply e FSFO dopo l'inizializzazione dello standby.
+
+
+
+=== Topologia e storage
+
+[cols="1,1,1,1,2"]
+|===
+| Ruolo | VM | Zona | Pool GCNV | Volumi (per host) 
+
+
+| Primario | `oracdb1` | `us-west1-a` | `oracle-pool-a` | `ora_<host>_u01`, `ora_<host>_data_01/02`, `ora_<host>_arch_01`, `ora_<host>_fra_01` 
+
+
+| Stand-by | `oracdb2` | `us-west1-b` | `oracle-pool-b` | Stesso schema di denominazione 
+
+
+| Osservatore | `oradg-obs` | `us-west1-c` | — | Solo disco di avvio 
+|===
+[cols="1,1,2"]
+|===
+| Storage | Supporto | Usa 
+
+
+| Sistema operativo | disco di avvio GCE | solo sistema operativo 
+
+
+| `/u01` | GCNV iSCSI | Home Grid/DB, staging (XFS) 
+
+
+| `+DATA` / `+RECO` / `+FRA` | GCNV iSCSI | ASM EXTERNAL — file di dati, archivi, FRA 
+|===
+.Tipi di macchine
+Esempio `n4-highmem-8` in questa guida; i carichi di lavoro OLTP in genere utilizzano `c4-standard-*`.
+
+
+
+== Provisioning di Compute Engine
+
+
+
+=== Passaggio 1: Creare le macchine virtuali
+
+Crea tre VM in zone diverse della stessa regione (isolamento dei guasti zonali). Preferisci una regione a basse emissioni di carbonio per il TCO e la sostenibilità, laddove soddisfi i requisiti di latenza e conformità (ad esempio  `us-west1` vs  `us-central1`). Utilizza la Cloud Console,  `gcloud`, Terraform o il tuo flusso di lavoro di provisioning standard.
+
+[cols="1,1,1,2,2,2"]
+|===
+| VM | Zona | tipo di macchina | Disco di avvio | Rete | Scopo 
+
+
+| `oracdb1` | `us-west1-a` | `n4-highmem-8` (esempio) o `c4-standard-*` | OL 10, 50 GB Hyperdisk Bilanciato (solo sistema operativo) | `oracle-vpc` / `oracle-subnet`, gVNIC | Database primario 
+
+
+| `oracdb2` | `us-west1-b` | Uguale al primario | OL 10, 50 GB Hyperdisk Bilanciato (solo sistema operativo) | Stesso | DB di riserva 
+
+
+| `oradg-obs` | `us-west1-c` | `e2-medium` | OL 10, 20 GB Hyperdisk Bilanciato | Stesso | FSFO Observer (solo Instant Client) 
+|===
+[NOTE]
+====
+*Livello di rete:* Premium quando la latenza o il traffico in uscita (>~200 GiB/mese) sono importanti; Standard per un TCO inferiore in ambiente di sviluppo/test.
+
+====
+Abilitare *Secure Boot*, *vTPM* e *Integrity Monitoring* su tutti e tre. Il disco di avvio contiene solo il sistema operativo. `/u01`, le home Grid/DB, lo staging e tutti i dati ASM utilizzano volumi iSCSI GCNV (vedere <<provision-gcnv-iscsi-volumes,Provisioning dei volumi iSCSI GCNV>>) — *non* collegare un disco dati GCE separato per `/u01`.
+
+
+
+=== Passaggio 2: Firewall VPC — consenti la porta TCP/1521 in tutte e tre le zone
+
+Consentire TCP/1521 tra tutti e tre gli IP interni delle VM `/32` in ogni zona (`us-west1-a/b/c` qui). Utilizzare regole firewall VPC o criteri firewall con la stessa allowlist. Le regole mancanti interrompono il redo transport e la connettività dell'Observer.
+
+*Cloud Console:* Rete VPC → Firewall → Crea regola `allow-oracle-net-dbhosts` su `oracle-vpc` — Ingresso, Consenti, origini = tre `/32` IP, TCP 1521. Replica l'uscita se necessario. Convalida da ogni VM:
+
+[source, bash]
+----
+sudo dnf install -y nmap-ncat
+
+for tgt in <oracdb1-ip> <oracdb2-ip> <oradg-obs-ip>; do
+  nc -zv -w 5 "$tgt" 22
+  nc -zv -w 5 "$tgt" 1521
+done
+----
+[cols="1,1,3"]
+|===
+| Porta | Previsto | Significato 
+
+
+| `22` | Collegato | Il percorso SSH funziona 
+
+
+| `1521` | Connessione rifiutata | Firewall aperto; il listener della griglia si avvia durante <<install-grid-infrastructure,Passaggio 1: Installare Oracle Grid Infrastructure (Oracle Restart) su ciascun host del database>> 
+
+
+| O | Timeout | Risolvi il problema del firewall o del routing 
+|===
+Eseguire da tutte e tre le macchine virtuali verso ciascun indirizzo IP del peer.
+
+
+
+=== Passaggio 3: Nome host, DNS e `/etc/hosts`
+
+Dopo l'avvio di ciascuna macchina virtuale, impostare il nome host e aggiungere  `/etc/hosts` voci su tutti e tre gli host in modo che la risoluzione dei nomi diretta/inversa funzioni per Oracle Net, il broker e l'Observer.
+
+[source, bash]
+----
+# Run on each VM, substituting the local short name (oracdb1, oracdb2, oradg-obs)
+sudo hostnamectl set-hostname <this-host>.example.internal
+
+# Run on every VM (same content)
+sudo tee -a /etc/hosts >/dev/null <<EOF
+
+# Oracle DG peers + FSFO Observer
+<oracdb1-ip>    oracdb1.example.internal    oracdb1
+<oracdb2-ip>    oracdb2.example.internal    oracdb2
+<oradg-obs-ip>  oradg-obs.example.internal  oradg-obs
+EOF
+----
+Sostituire gli indirizzi IP interni di GCE (visibili nell'elenco *Compute Engine → VM instances*, colonna _Internal IP_).
+
+Convalida da ciascun host:
+
+[source, bash]
+----
+ping -c 1 oracdb1 && ping -c 1 oracdb2 && ping -c 1 oradg-obs
+----
+
+
+=== Passaggio 4: Baseline del sistema operativo (solo host DB)
+
+[NOTE]
+====
+*Prerequisito:* HTTPS in uscita verso  `yum.oracle.com` (Cloud NAT o mirror interno su sottoreti private).
+
+====
+Eseguire su  `oracdb1` e  `oracdb2` (la configurazione dell'Observer è trattata in <<install-instant-client-on-observer,Passaggio 4: Installare Oracle Instant Client sull'host Observer>>).
+
+[source, bash]
+----
+# Oracle 26ai preinstall (package name varies by repo)
+sudo dnf install -y oracle-ai-database-preinstall-26ai \
+  || sudo dnf install -y oracle-database-preinstall-26ai \
+  || sudo dnf install -y oracle-database-preinstall-23ai
+
+# grid user + asm groups
+sudo groupadd -g 54327 asmadmin; sudo groupadd -g 54328 asmdba; sudo groupadd -g 54329 asmoper
+sudo useradd -u 54322 -g oinstall -G dba,oper,asmadmin,asmdba,asmoper grid
+sudo passwd -l grid; sudo passwd -l oracle
+sudo usermod -a -G asmdba,asmadmin oracle
+
+# iSCSI, multipath, OUI JDK
+sudo dnf install -y iscsi-initiator-utils device-mapper-multipath sg3_utils \
+  java-21-openjdk-headless libxcrypt-compat
+
+# THP and time
+cat /sys/kernel/mm/transparent_hugepage/enabled   # expect [never]
+timedatectl
+chronyc tracking
+----
+[NOTE]
+====
+*Security posture (OL 10):* I comandi seguenti impostano SELinux su permissivo e disabilitano `firewalld`. Questa è solo una configurazione di laboratorio minima. Per una configurazione SELinux e firewall più sicura, consultare le linee guida di sicurezza della propria organizzazione.
+
+====
+[source, bash]
+----
+sudo setenforce 0
+sudo sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+sudo systemctl disable --now firewalld
+
+sudo cp -n /etc/iscsi/iscsid.conf /etc/iscsi/iscsid.conf.orig
+sudo sed -i '/^[#[:space:]]*node\.session\.timeo\.replacement_timeout/d' /etc/iscsi/iscsid.conf
+echo "node.session.timeo.replacement_timeout = 120" | sudo tee -a /etc/iscsi/iscsid.conf
+sudo systemctl enable --now iscsid
+
+sudo reboot
+----
+
+
+=== Passaggio 5: Acquisire il nome dell'iSCSI initiator (IQN)
+
+Dopo il riavvio, acquisire l'IQN di ciascun host DB. Questi IQN verranno utilizzati per creare i gruppi host GCNV in <<create-host-groups,Passaggio 2: Creare i gruppi host>>.
+
+[source, bash]
+----
+sudo cat /etc/iscsi/initiatorname.iscsi
+# InitiatorName=iqn.1994-05.com.redhat:abc123def456
+----
+Ripeti su  `oracdb2`. Registra l’IQN di ciascun host — un gruppo host per host, in modo che il riavvio o la rigenerazione dell’IQN di un singolo host non possa influire sulla visibilità del volume iSCSI GCNV di un altro host.
+
+[NOTE]
+====
+*VM clonate:* Se entrambi gli host condividono lo stesso IQN, rigenerare su `oracdb2` (arresta `iscsi`, cancella `/var/lib/iscsi/nodes/*`, nuovo `InitiatorName` in `/etc/iscsi/initiatorname.iscsi`, riavvia `iscsid`).
+
+====
+
+
+== Provisioning dei volumi iSCSI GCNV
+
+
+
+=== Passaggio 1: Creare un pool di storage GCNV Flex Unified iSCSI per ogni zona del database
+
+Un pool Flex Unified per zona di database (vedere <<architecture,Architettura>>).
+
+Crea due pool per questa configurazione HA (ripeti i passaggi per ogni zona):
+
+[cols="1,1,2"]
+|===
+| Nome pool | Zona | Utilizzato da 
+
+
+| `oracle-pool-a` | `us-west1-a` | `oracdb1` (primario) 
+
+
+| `oracle-pool-b` | `us-west1-b` | `oracdb2` (standby) 
+|===
+*NetApp Volumi → Pool di storage → Crea* per ogni pool:
+
+* *Livello di servizio:* Flex (non Premium)
+* *Tipo:* Unificato
+* *Zona:* corrisponde alla zona VM del database (`us-west1-a`/ `us-west1-b`)
+* *PSA:* collegato a `oracle-vpc`
+* *Capacità:* dimensionata per il carico di lavoro; utilizzare throughput/IOPS personalizzati quando redo, backup o restore superano il margine predefinito (fino a 5120 MiB/s o 160K IOPS per pool, in base ai limiti del prodotto)
+
+
+Attendi  `READY`. Scala le dimensioni del pool in base all'ingombro del tuo database (le dimensioni in <<create-gcnv-iscsi-volumes,Passaggio 3: Creare i volumi iSCSI GCNV>> sono esempi).
+
+[NOTE]
+====
+*Modalità predefinita (questa guida):* I pool Flex Unified utilizzano la modalità predefinita (`--mode=default`). Crea pool e volumi iSCSI con Cloud Console o `gcloud netapp`. La replica dei volumi, gli snapshot e i cloni utilizzano le API di Google Cloud (<<gcnv-standby-initialization,Passaggio 3: Inizializzazione dello standby GCNV>>).
+
+====
+
+
+=== Passaggio 2: Creare i gruppi host (uno per ogni host del database)
+
+Creare un gruppo host per ogni host del database in modo che ogni VM veda solo i propri volumi: il primario e lo standby non devono condividere volumi iSCSI GCNV. L'Observer non dispone di risorse GCNV. Nella Cloud Console:
+
+. *NetApp Volumi → Gruppi host → Crea*
+. *Nome:* `oracdb1-hg` · *Regione:* `us-west1` · *Tipo:* iSCSI initiator · *Tipo di sistema operativo:* Linux
+. *Host:* incolla l'IQN da  `oracdb1` (il valore di  `/etc/iscsi/initiatorname.iscsi`)
+. *Descrizione:* “Host primario Oracle oracdb1” · *Crea*
+. Ripeti per  `oracdb2-hg` con l’IQN di  `oracdb2`
+
+
+
+
+=== Passaggio 3: Creare i volumi iSCSI GCNV (per ogni host del database)
+
+Ogni database host ottiene cinque volumi iSCSI GCNV nel pool della propria zona: uno per  `/u01` e quattro dispositivi di supporto ASM:
+
+[cols="2,1,3,2"]
+|===
+| Volume iSCSI GCNV | Dimensione | Usa | Alias multipath 
+
+
+| `ora_<host>_u01` | 100 GiB | `/u01` Volume iSCSI GCNV — Grid/Oracle homes, staging | `/dev/mapper/ora_<host>_u01` 
+
+
+| `ora_<host>_data_01` | 50 GiB | ASM `+DATA` | `/dev/mapper/ora_<host>_data_01` 
+
+
+| `ora_<host>_data_02` | 50 GiB | ASM `+DATA` (a strisce) | `/dev/mapper/ora_<host>_data_02` 
+
+
+| `ora_<host>_arch_01` | 100 GiB | ASM `+RECO` | `/dev/mapper/ora_<host>_arch_01` 
+
+
+| `ora_<host>_fra_01` | 100 GiB | ASM `+FRA` | `/dev/mapper/ora_<host>_fra_01` 
+|===
+Nomi dei volumi: solo lettere, numeri e underscore (senza trattini).
+
+[NOTE]
+====
+*Layout minimo (solo convalida):* Due LUN per host (`*_data`, `*_reco`) con `arch_01p1`→`+RECO` e `arch_01p2`→`+FRA` è accettabile per il laboratorio; la produzione utilizza cinque volumi per <<create-gcnv-iscsi-volumes,Passaggio 3: Creare i volumi iSCSI GCNV>>.
+
+====
+Su `oracdb1`: crea tutti e cinque i volumi in `oracle-pool-a`, gruppo host `oracdb1-hg`.
+
+Su `oracdb2`: crea tutti e cinque i volumi in `oracle-pool-b`, gruppo host `oracdb2-hg`.
+
+*NetApp Volumes → Volumes → Create* — iSCSI, pool e gruppo host corretti, Linux. Record per pool:
+
+* Indirizzi IP del portale iSCSI → `<ISCSI_PORTAL_1>`, `<ISCSI_PORTAL_2>` (portali del pool primario su `oracdb1`; portali del pool di standby su `oracdb2` — potrebbero essere diversi)
+* Volume seriale dalla Cloud Console: utilizzare con WWID rilevato dall'host in <<configure-iscsi-and-multipath,Passaggio 4: Configurare Linux iSCSI e multipath per i volumi iSCSI GCNV>>
+
+
+
+
+=== Passaggio 4: Configurare Linux iSCSI e multipath per i volumi iSCSI GCNV
+
+Eseguire su `oracdb1` utilizzando i portali del pool di quell’host, quindi su `oracdb2` utilizzando i portali del pool di standby.
+
+Se l'uscita dell'host è limitata, consentire TCP/3260 da ciascuna VM del database verso i suoi IP del portale iSCSI GCNV (oltre a TCP/1521 tra VM da <<vpc-firewall-allow-1521,Passaggio 2: Firewall VPC — consenti la porta TCP/1521 in tutte e tre le zone>>).
+
+. Scopri i target, accedi e mantieni l'avvio del nodo:
++
+[source, bash]
+----
+sudo iscsiadm --mode discovery --op update --type sendtargets --portal <ISCSI_PORTAL_1>
+sudo iscsiadm --mode discovery --op update --type sendtargets --portal <ISCSI_PORTAL_2>
+sudo iscsiadm --mode node --op update --name node.startup --value automatic
+sudo iscsiadm --mode node -l all
+sudo systemctl enable --now iscsid iscsi multipathd
+sudo iscsiadm --mode session         # expect 10 sessions (5 GCNV iSCSI volumes × 2 portals)
+sudo lsblk -o NAME,SIZE,WWN,VENDOR,MODEL
+----
+
+
+Dopo il riavvio, ricontrollare prima di avviare Oracle:
+
++
+
+[source, bash]
+----
+sudo iscsiadm --mode session
+sudo multipath -ll
+----
+. Configura `device-mapper-multipath`:
+
+
+[source, bash]
+----
+sudo tee /etc/multipath.conf >/dev/null <<'EOF'
+defaults {
+    find_multipaths     yes
+    user_friendly_names yes
+}
+blacklist {
+    devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
+    devnode "^hd[a-z]"
+    devnode "^cciss.*"
+}
+EOF
++
+sudo systemctl enable --now multipathd
+sudo multipath -ll
+----
+. Aggiungi gli alias WWID rilevati dall'host `/etc/multipath.conf` (non fare supposizioni — `multipath.conf` *non* espande le variabili della shell). Rileva i WWID:
++
+[source, bash]
+----
+sudo multipath -ll
+for dev in /dev/sd*; do
+  [ -b "$dev" ] || continue
+  printf '%s: ' "$dev"
+  sudo /usr/lib/udev/scsi_id --whitelisted --device="$dev" 2>/dev/null || true
+  echo
+done
+----
++
+Aggiungi gli alias concreti per quell'host a  `/etc/multipath.conf`, quindi  `sudo systemctl restart multipathd`.
+
++
+Su `oracdb1`, aggiungi:
+
+
+
+[source]
+----
+multipaths {
+    multipath { wwid <host-discovered-wwid-for-u01>      alias ora_oracdb1_u01     }
+    multipath { wwid <host-discovered-wwid-for-data-01>  alias ora_oracdb1_data_01 }
+    multipath { wwid <host-discovered-wwid-for-data-02>  alias ora_oracdb1_data_02 }
+    multipath { wwid <host-discovered-wwid-for-arch-01>  alias ora_oracdb1_arch_01 }
+    multipath { wwid <host-discovered-wwid-for-fra-01>   alias ora_oracdb1_fra_01  }
+}
+----
++ Su  `oracdb2`, usa lo stesso schema con  `ora_oracdb2_*` alias, quindi:
+
+[source, bash]
+----
+sudo systemctl restart multipathd
+ls -l /dev/mapper/ora_$(hostname -s)_*
+----
+
+
+=== Passaggio 5: Partizionare i dispositivi di supporto ASM sui volumi iSCSI GCNV
+
+Partiziona i quattro dispositivi di supporto ASM (non  `u01`) con una partizione GPT ciascuno. ASM utilizza la partizione raw. Esegui su ogni host. Tutti i blocchi successivi utilizzano  `HOST=$(hostname -s)` per selezionare automaticamente i dispositivi dell'host locale.
+
+[source, bash]
+----
+HOST=$(hostname -s)        # oracdb1 on the primary, oracdb2 on the standby
+for dev in /dev/mapper/ora_${HOST}_data_01 \
+           /dev/mapper/ora_${HOST}_data_02 \
+           /dev/mapper/ora_${HOST}_arch_01 \
+           /dev/mapper/ora_${HOST}_fra_01; do
+  sudo parted -s "$dev" mklabel gpt
+  sudo parted -s "$dev" mkpart primary 0% 100%
+done
+sudo partprobe
+sudo systemctl reload multipathd
+ls /dev/mapper/ora_${HOST}_*p1     # expect 4 partitions
+
+HOST=$(hostname -s)
+sudo tee /etc/udev/rules.d/99-oracle-asm.rules >/dev/null <<'EOF'
+KERNEL=="dm-*", ENV{DM_UUID}=="part?-mpath-*", ENV{DM_NAME}=="ora_oracdb*_*p?", \
+    OWNER="grid", GROUP="asmadmin", MODE="0660"
+EOF
+
+sudo udevadm control --reload-rules
+for part in /dev/mapper/ora_${HOST}_*p1; do
+  dm=$(readlink -f "$part" | xargs basename)
+  sudo udevadm trigger --action=change --name-match="/dev/${dm}"
+done
+sudo udevadm settle
+ls -lL /dev/mapper/ora_${HOST}_*p1    # grid:asmadmin 0660
+----
+
+
+=== Passaggio 6: Formattare e montare  `/u01` sul volume iSCSI GCNV locale
+
+Il  `ora_<host>_u01`volume iSCSI GCNV contiene Grid home, Oracle home e staging. Formatta XFS sul dispositivo multipath (non partizionato per ASM). Utilizza UUID in  `/etc/fstab` (non un'etichetta di filesystem condiviso):
+
+[source, bash]
+----
+HOST=$(hostname -s)
+U01_DEV=/dev/mapper/ora_${HOST}_u01
+ls -l "$U01_DEV"
+
+sudo mkfs.xfs -f "$U01_DEV"
+U01_UUID=$(sudo blkid -s UUID -o value "$U01_DEV")
+
+sudo mkdir -p /u01
+echo "UUID=${U01_UUID} /u01 xfs defaults,_netdev,nofail,x-systemd.requires=iscsi.service,x-systemd.requires=multipathd.service,x-systemd.after=iscsi.service,x-systemd.after=multipathd.service 0 0" | sudo tee -a /etc/fstab
+sudo mount -a
+
+sudo mkdir -p /u01/app/oraInventory /u01/app/26ai/grid /u01/app/grid \
+  /u01/app/oracle/product/26ai/db_1 /u01/stage
+sudo chown -R grid:oinstall /u01/app/oraInventory /u01/app/26ai /u01/app/grid
+sudo chown -R oracle:oinstall /u01/app/oracle /u01/stage
+sudo chmod -R 775 /u01/app /u01/stage
+----
+Riavvia una volta e conferma `/u01` i mount prima di <<install-oracle-software,Installare il software Oracle>>.
+
+
+
+== Installare il software Oracle
+
+Eseguire Grid e quindi l'installazione della home del database su ciascun host DB prima <<create-primary-database,Creare il database primario>>.
+
+
+
+=== Passaggio 1: Installare Oracle Grid Infrastructure (Oracle Restart) su ciascun host del database
+
+Eseguire tutta questa sezione su  `oracdb1`, quindi ripetere su  `oracdb2`. Entrambi gli host ottengono la propria Grid home, istanza ASM e gruppi di dischi: Data Guard replica su Oracle Net, non sullo storage.
+
+
+
+==== Preparare i binari di Oracle su `/u01`
+
+[source, bash]
+----
+sudo chown oracle:oinstall /u01/stage && sudo chmod 775 /u01/stage
+# Upload GoldImages, RU, OPatch to /u01/stage.
+----
+
+
+==== Decomprimi la home di Grid sul posto
+
+Il 26ai Grid GoldImage si installa decomprimendo direttamente nella home di destinazione del Grid:
+
+[source, bash]
+----
+sudo -u grid bash -c '
+cd /u01/app/26ai/grid
+unzip -q /u01/stage/LINUX.X64_<RELEASE>_grid_home.zip
+'
+sudo chown -R grid:oinstall /u01/app/26ai/grid
+----
+*Livello RU della Grid.* Questa guida presuppone che la Grid GoldImage includa già il tuo RU convalidato. Se la Grid GoldImage è precedente all'RU di destinazione, applica la patch alla directory principale della Grid durante la configurazione utilizzando il flusso documentato da Oracle  `gridSetup.sh -applyRU`, oppure utilizza una Grid GoldImage con l'RU incluso. Mantieni le directory principali della Grid e del database allo stesso livello di patch previsto.
+
+
+
+==== Scatto singolo `gridSetup` — file di risposta completo HA_CONFIG
+
+Compilare `/tmp/grid.rsp` su ciascun host (`responseFileVersion` è obbligatorio; sostituire `HOST` e utilizzare password complesse):
+
+[source, bash]
+----
+HOST=$(hostname -s)
+
+sudo -u grid bash -c "cat > /tmp/grid.rsp <<RSP
+oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v23.0.0
+INVENTORY_LOCATION=/u01/app/oraInventory
+installOption=HA_CONFIG
+ORACLE_BASE=/u01/app/grid
+clusterUsage=GENERAL_PURPOSE
+OSDBA=asmdba
+OSOPER=asmoper
+OSASM=asmadmin
+storageOption=FLEX_ASM_STORAGE
+sysasmPassword=WelcomeOracle1!
+asmsnmpPassword=WelcomeOracle1!
+diskGroupName=DATA
+redundancy=EXTERNAL
+auSize=4
+diskString=/dev/mapper/ora_${HOST}_*p*
+diskList=/dev/mapper/ora_${HOST}_data_01p1,/dev/mapper/ora_${HOST}_data_02p1
+managementOption=NONE
+RSP"
+sudo -u grid chmod 600 /tmp/grid.rsp
+----
+Eseguire  `gridSetup` per copiare i file binari e predisporre la configurazione:
+
+[source, bash]
+----
+sudo -u grid bash -c '
+export ORACLE_HOME=/u01/app/26ai/grid
+export ORACLE_BASE=/u01/app/grid
+cd /u01/app/26ai/grid
+./gridSetup.sh -silent -responseFile /tmp/grid.rsp -ignorePrereqFailure
+'
+----
+Aspettati  `Successfully Setup Software with warning(s).` e un codice di uscita 6 (avvisi) o 0.
+
+
+
+==== Esegui  `orainstRoot.sh` e  `root.sh` come root
+
+[source, bash]
+----
+sudo /u01/app/oraInventory/orainstRoot.sh
+sudo /u01/app/26ai/grid/root.sh
+----
+`root.sh` crea i  `crsctl` /  `srvctl` /  `asmcmd` wrapper e avvia OHAS.
+
+
+
+==== `gridSetup.sh -executeConfigTools` — avviare ASM e creare `+DATA`
+
+Eseguire gli assistenti di configurazione (NETCA, ASMCA, CVU) sul file di risposta da  — questo crea l'istanza ASM e il  `+DATA` gruppo di dischi:
+
+[source, bash]
+----
+sudo -u grid bash -c '
+export ORACLE_HOME=/u01/app/26ai/grid
+export ORACLE_BASE=/u01/app/grid
+cd /u01/app/26ai/grid
+./gridSetup.sh -silent -executeConfigTools -responseFile /tmp/grid.rsp
+'
+----
+Prevedere  `Successfully Configured Software.` dopo NETCA / ASMCA / CVU.
+
+
+
+==== Creare `+RECO` e `+FRA` gruppi di dischi
+
+L'installazione singola crea solo  `+DATA`. Crea gli altri due tramite  `asmca`:
+
+[source, bash]
+----
+HOST=$(hostname -s)
+
+sudo -u grid bash -c "
+export ORACLE_HOME=/u01/app/26ai/grid
+export ORACLE_SID=+ASM
+
+\$ORACLE_HOME/bin/asmca -silent -createDiskGroup \
+  -diskGroupName RECO \
+  -disk /dev/mapper/ora_${HOST}_arch_01p1 \
+  -redundancy EXTERNAL -au_size 4
+
+\$ORACLE_HOME/bin/asmca -silent -createDiskGroup \
+  -diskGroupName FRA \
+  -disk /dev/mapper/ora_${HOST}_fra_01p1 \
+  -redundancy EXTERNAL -au_size 4
+"
+----
+
+
+==== Verificare ASM e Oracle Restart
+
+[source, bash]
+----
+sudo -u grid ORACLE_HOME=/u01/app/26ai/grid ORACLE_SID=+ASM \
+  /u01/app/26ai/grid/bin/sqlplus -s / as sysasm <<'SQL'
+SELECT name, total_mb, free_mb, state FROM v$asm_diskgroup ORDER BY name;
+SQL
+
+sudo /u01/app/26ai/grid/bin/crsctl stat res -t
+# Expected ONLINE: ora.DATA.dg, ora.RECO.dg, ora.FRA.dg, ora.LISTENER.lsnr, ora.asm, ora.cssd, ora.evmd.
+----
+Ripeti questa sezione su `oracdb2`. Il `HOST=$(hostname -s)` pattern in  e  seleziona automaticamente i dispositivi iSCSI GCNV di quell’host. Utilizza gli stessi nomi dei gruppi di dischi ASM: Data Guard replica tramite Oracle Net, non tramite storage.
+
+
+
+=== Passaggio 2: Installare Oracle Database 26ai su ciascun host DB
+
+Eseguire questa sezione su  `oracdb1`, quindi su  `oracdb2`. Il database standby viene creato in <<create-standby-database,Creare il database standby>>.
+
+
+
+==== Decomprimi la cartella DB home e la patch RU
+
+[source, bash]
+----
+sudo su - oracle
+cd /u01/app/oracle/product/26ai/db_1
+unzip -q /u01/stage/LINUX.X64_<RELEASE>_db_home.zip
+rm -rf OPatch
+unzip -q /u01/stage/p6880880_<base>_Linux-x86-64.zip                    # latest OPatch
+unzip -q /u01/stage/p<RU_PATCH>_<base>_Linux-x86-64.zip -d /u01/stage   # latest 26ai RU
+----
+Consultare la documentazione Oracle per la struttura della directory RU e il percorso  `-applyRU`.
+
+
+
+==== Installazione silenziosa solo software con il RU applicato
+
+[source, bash]
+----
+sudo -u oracle tee /u01/stage/dbinstall.rsp >/dev/null <<'EOF'
+oracle.install.option=INSTALL_DB_SWONLY
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/u01/app/oraInventory
+ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+ORACLE_BASE=/u01/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.OSDBA_GROUP=dba
+oracle.install.db.OSOPER_GROUP=oper
+oracle.install.db.OSBACKUPDBA_GROUP=backupdba
+oracle.install.db.OSDGDBA_GROUP=dgdba
+oracle.install.db.OSKMDBA_GROUP=kmdba
+oracle.install.db.OSRACDBA_GROUP=racdba
+oracle.install.db.rootconfig.executeRootScript=false
+EOF
+
+sudo -u oracle bash -c '
+export CV_ASSUME_DISTID=OEL10    # OEL9 / OEL8.10 if cluvfy requires it
+cd /u01/app/oracle/product/26ai/db_1
+./runInstaller -applyRU /u01/stage/<RU_PATCH> \
+  -applyOneOffs /u01/stage/39292021 \
+  -silent -ignorePrereqFailure -responseFile /u01/stage/dbinstall.rsp
+'
+----
+Su OL 8/9, omettere  `-applyOneOffs` dalla  `runInstaller` riga.
+
+Come  `root`, esegui lo script post-installazione:
+
+[source, bash]
+----
+sudo /u01/app/oracle/product/26ai/db_1/root.sh
+----
+
+
+==== Configura l'ambiente Oracle
+
+Su ciascun host DB (`orcl` su `oracdb1`, `orcls` su `oracdb2`):
+
+[source, bash]
+----
+sudo -u oracle tee -a /home/oracle/.bash_profile >/dev/null <<'EOF'
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export ORACLE_SID=orcl                          # use 'orcls' on oracdb2
+export GRID_HOME=/u01/app/26ai/grid
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+EOF
+----
+(Usare  `ORACLE_SID=orcls` sul host di standby. Il database di standby viene creato in <<create-standby-database,Creare il database standby>>.)
+
+
+
+== Crea il database primario (`oracdb1` solo)
+
+Eseguire  `dbca` in modalità silenziosa sui gruppi di dischi ASM:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$PATH
+
+dbca -silent -createDatabase \
+  -templateName General_Purpose.dbc \
+  -gdbname orcl -sid orcl \
+  -characterSet AL32UTF8 -nationalCharacterSet AL16UTF16 \
+  -sysPassword "ChangeMe!1" -systemPassword "ChangeMe!1" \
+  -emConfiguration NONE \
+  -datafileDestination +DATA -storageType ASM \
+  -recoveryAreaDestination +FRA -recoveryAreaSize 25000 \
+  -enableArchive true -archiveLogMode AUTO \
+  -memoryMgmtType AUTO_SGA -totalMemory 4096 \
+  -databaseType MULTIPURPOSE \
+  -createAsContainerDatabase true -numberOfPDBs 1 \
+  -pdbName orclpdb -pdbAdminPassword "ChangeMe!1" \
+  -ignorePreReqs
+'
+----
+Puntare i file di archivio a  `+RECO` (lo standby utilizza le impostazioni corrispondenti in <<standby-init-ora-and-nomount,Passaggio 2: Standby: file pfile init.ora minimo, file password, NOMOUNT>>):
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export ORACLE_SID=orcl
+$ORACLE_HOME/bin/sqlplus -s / as sysdba <<SQL
+ALTER SYSTEM SET log_archive_dest_1='\''LOCATION=+RECO VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=orcl'\'' SCOPE=BOTH;
+ALTER PLUGGABLE DATABASE ALL OPEN;
+ALTER PLUGGABLE DATABASE ALL SAVE STATE;
+EXIT
+SQL
+'
+----
+Verificare che il database sia attivo tramite Oracle Restart:
+
+[source, bash]
+----
+sudo /u01/app/26ai/grid/bin/srvctl status database -d orcl
+# Expected: Database is running
+
+sudo -u oracle sqlplus -s / as sysdba <<<"SELECT name, open_mode, log_mode FROM v\$database;"
+# Expected: ORCL, READ WRITE, ARCHIVELOG
+----
+*Creare un servizio dell'applicazione in base al ruolo (Oracle Restart).* Le applicazioni devono connettersi tramite  `orclapp`, non tramite il nome del DB, in modo che il failover sia trasparente.
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+
+srvctl add service \
+  -db orcl \
+  -service orclapp \
+  -pdb orclpdb \
+  -role PRIMARY \
+  -policy AUTOMATIC
+
+srvctl start service -db orcl -service orclapp
+srvctl status service -db orcl -service orclapp
+'
+----
+Dopo l'abilitazione del Broker, `orclapp` viene eseguito solo su PRIMARY. Multiplexa i file di controllo su gruppi di dischi ASM; dimensiona la memoria in base al carico di lavoro (questa guida utilizza 4 GB / 3 GB SGA come esempi).
+
+
+
+== Creare il database standby
+
+Costruisci  `orcls` su  `oracdb2` (volumi dedicati su  `oracle-pool-b`). Completa la configurazione iniziale primaria e di standby, quindi <<gcnv-standby-initialization,Passaggio 3: Inizializzazione dello standby GCNV>>, le attività di completamento dello standby e <<broker-fsfo-observer,Configurare Data Guard Broker, FSFO e Observer>>. Destinazione: primaria READ WRITE; standby PHYSICAL STANDBY, MOUNTED, MRP in applicazione.
+
+
+
+=== Passaggio 1: Primario: password SYS, file delle password e parametri DG
+
+Su `oracdb1` come `oracle`:
+
+[source, bash]
+----
+sudo su - oracle
+. ~/.bash_profile        # ORACLE_SID=orcl, ORACLE_HOME set
+----
+Su `oracdb2`:
+
+[source, bash]
+----
+GRID_HOME=/u01/app/26ai/grid
+sudo -u grid tee "$GRID_HOME/network/admin/listener.ora" >/dev/null <<'EOF'
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = oracdb2.example.internal)(PORT = 1521)))
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC = (GLOBAL_DBNAME = orcls)        (ORACLE_HOME = /u01/app/oracle/product/26ai/db_1) (SID_NAME = orcls))
+    (SID_DESC = (GLOBAL_DBNAME = orcls_DGMGRL) (ORACLE_HOME = /u01/app/oracle/product/26ai/db_1) (SID_NAME = orcls)))
+EOF
+----
+Riavviare tramite Oracle Restart su ciascun host:
+
+[source, bash]
+----
+sudo -u grid bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=$GRID_HOME
+$GRID_HOME/bin/srvctl stop listener
+$GRID_HOME/bin/srvctl start listener
+$GRID_HOME/bin/lsnrctl status
+'
+----
+`lsnrctl status`deve elencare `<SID>`e `<SID>_DGMGRL`.
+
+
+
+=== Passaggio 2: Standby: file pfile init.ora minimo, file password, NOMOUNT
+
+Copiare il file della password principale sul server di standby (IAP `gcloud compute scp`):
+
+[source, bash]
+----
+PRIMARY_ZONE=us-west1-a       # zone of oracdb1
+STANDBY_ZONE=us-west1-b       # zone of oracdb2
+
+gcloud compute scp \
+  oracdb1:/u01/app/oracle/product/26ai/db_1/dbs/orapworcl ./orapworcl \
+  --zone=$PRIMARY_ZONE --tunnel-through-iap
+
+gcloud compute scp \
+  ./orapworcl oracdb2:/u01/app/oracle/product/26ai/db_1/dbs/orapworcls \
+  --zone=$STANDBY_ZONE --tunnel-through-iap
+----
+Su  `oracdb2`, imposta la proprietà e crea il pfile di standby. Sul *primario*, copia  `*.compatible` prima:
+
+[source, bash]
+----
+# On oracdb1
+sudo -u oracle sqlplus -s / as sysdba \
+  <<<"SELECT value FROM v\$parameter WHERE name='compatible';"
+----
+Su  `oracdb2`, sostituisci quel valore con  `<COPY_FROM_PRIMARY>` nel blocco sottostante:
+
+[source, bash]
+----
+sudo -u oracle mkdir -p /u01/app/oracle/admin/orcls/adump
+sudo chown oracle:oinstall /u01/app/oracle/product/26ai/db_1/dbs/orapworcls
+sudo chmod 0600 /u01/app/oracle/product/26ai/db_1/dbs/orapworcls
+
+sudo -u oracle tee /u01/app/oracle/product/26ai/db_1/dbs/initorcls.ora >/dev/null <<'EOF'
+*.db_name='orcl'
+*.db_unique_name='orcls'
+*.audit_file_dest='/u01/app/oracle/admin/orcls/adump'
+*.diagnostic_dest='/u01/app/oracle'
+*.compatible='<COPY_FROM_PRIMARY>'
+*.sga_target=3072m
+*.pga_aggregate_target=1024m
+*.processes=320
+*.remote_login_passwordfile='EXCLUSIVE'
+*.standby_file_management='AUTO'
+*.fal_server='orcl'
+*.log_archive_config='DG_CONFIG=(orcl,orcls)'
+*.log_archive_dest_1='LOCATION=+RECO VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=orcls'
+*.log_archive_dest_2='SERVICE=orcl AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl'
+*.log_archive_dest_state_2='DEFER'
+*.log_archive_format='%t_%s_%r.arc'
+*.dg_broker_start=TRUE
+*.undo_tablespace='UNDOTBS1'
+*.open_cursors=300
+*.db_create_file_dest='+DATA'
+*.db_create_online_log_dest_1='+DATA'
+*.db_recovery_file_dest='+FRA'
+*.db_recovery_file_dest_size=25000m
+EOF
+
+echo "orcls:/u01/app/oracle/product/26ai/db_1:N" | sudo tee -a /etc/oratab
+
+sudo -u oracle bash -c '
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export ORACLE_SID=orcls
+sqlplus / as sysdba <<SQL
+STARTUP NOMOUNT PFILE=/u01/app/oracle/product/26ai/db_1/dbs/initorcls.ora;
+EXIT
+SQL
+'
+----
+NOMOUNT senza file di dati fino a <<gcnv-standby-initialization,Passaggio 3: Inizializzazione dello standby GCNV>>.
+
+
+
+=== Passaggio 3: Inizializzazione dello standby GCNV
+
+Popola i volumi ASM di standby in *`oracle-pool-b`* utilizzando la replica *Google Cloud NetApp Volumes* (SnapMirror-based, *modalità predefinita*), *snapshot di volume* o *clone*, quindi esegui <<oracle-finalize,Oracle finalizza>>. iSCSI e ASM sono uguali a <<provision-gcnv-iscsi-volumes,Provisioning dei volumi iSCSI GCNV>>.
+
+[cols="1,2"]
+|===
+| API | Usa 
+
+
+| `gcloud netapp storage-pools` | Crea pool Flex Unified in *modalità predefinita* (`--mode=default`) 
+
+
+| `gcloud netapp volumes` | volumi iSCSI, gruppi host, snapshot 
+
+
+| `gcloud netapp volumes replications` | Replica *del volume* tra sedi diverse 
+|===
+[cols="1,4"]
+|===
+| Passaggio | Azione 
+
+
+| 1 | Registro di archivio primario + registrazione forzata (<<primary-sys-password-and-dg-params,Passaggio 1: Primario: password SYS, file delle password e parametri DG>>) 
+
+
+| 2 | Quiescenza: `BEGIN BACKUP`, record SCN, file di controllo di standby 
+
+
+| 3 | Replica del volume (<<create-volume-replications,Creare repliche di volume>> e <<cutover-quiesce-stop-repl-attach,Cutover — quiesce, interrompi la replica, collega i LUN in standby>>) o snapshot (<<snapshot-seed,Alternativa — snapshot seed>>) 
+
+
+| 4 | Su `oracdb2`: iSCSI, multipath, montaggio ASM (<<configure-iscsi-and-multipath,Passaggio 4: Configurare Linux iSCSI e multipath per i volumi iSCSI GCNV>>, <<partition-asm-backing-devices,Passaggio 5: Partizionare i dispositivi di supporto ASM sui volumi iSCSI GCNV>> e ) 
+
+
+| 5 | Oracle finalizza — ripristino su SCN, *MONTATO* (<<oracle-finalize,Oracle finalizza>>) 
+
+
+| 6 | Ricostruzione SRL (<<standby-redo-log-files,Passaggio 4: file di log di ripristino in standby>>), MRP, broker (<<broker-fsfo-observer,Configurare Data Guard Broker, FSFO e Observer>>) 
+|===
+La replica attiva di RMAN rimane valida per i laboratori di piccole dimensioni. *La replica GCNV è preferibile* per il seeding di standby in produzione.
+
+
+
+==== Prerequisiti
+
+* `gcloud netapp` con supporto per la replica dei volumi.
+* Due pool *in modalità predefinita* in posizioni diverse (`oracle-pool-a`, `oracle-pool-b`).
+* Volumi di origine sul pool primario collegati a  `oracdb1-hg`; volumi di destinazione creati dalla replica.
+* Esegui la replica da Cloud Shell o da una workstation, non dalle VM del database.
+
+
+[source, bash]
+----
+export PROJECT=<your-gcp-project>
+export LOC_A=us-west1-a
+export LOC_B=us-west1-b
+export DEST_POOL="projects/${PROJECT}/locations/${LOC_B}/storagePools/oracle-pool-b"
+----
+Creare un pool di standby se necessario:
+
+[source, bash]
+----
+gcloud netapp storage-pools create oracle-pool-b \
+  --project="${PROJECT}" --location="${LOC_B}" \
+  --service-level=flex --type=unified --mode=default \
+  --capacity=1024 --network=name=<your-vpc>
+----
+
+
+==== Creare repliche di volume
+
+[source, bash]
+----
+gcloud netapp volumes replications create repl-oracdb2-data \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_data \
+  --replication-schedule=EVERY_10_MINUTES \
+  --destination-volume-parameters="storage_pool=${DEST_POOL},volume_id=oracdb2_data,share_name=oracdb2_data"
+
+gcloud netapp volumes replications create repl-oracdb2-reco \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_reco \
+  --replication-schedule=EVERY_10_MINUTES \
+  --destination-volume-parameters="storage_pool=${DEST_POOL},volume_id=oracdb2_reco,share_name=oracdb2_reco"
+----
+Attendi che  `mirrorState` sia *SPECCHIATA* / la sincronizzazione iniziale sia completata.
+
+
+
+==== Cutover — quiesce, interrompi la replica, collega i LUN in standby
+
+*Primario:*
+
+[source]
+----
+ALTER DATABASE BEGIN BACKUP;
+SELECT CURRENT_SCN FROM V$DATABASE;
+ALTER DATABASE CREATE STANDBY CONTROLFILE AS '/tmp/orcls_stby.ctl';
+----
+Consentire il ciclo di replica finale, quindi:
+
+[source, bash]
+----
+gcloud netapp volumes replications stop repl-oracdb2-data \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_data --force
+
+gcloud netapp volumes replications stop repl-oracdb2-reco \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_reco --force
+----
+Collega i volumi di destinazione a  `oracdb2-hg` (la LUN replicata potrebbe mantenere il nome di origine — usa  `name=oracdb1_data_lun` durante l'aggiornamento):
+
+[source, bash]
+----
+HG=$(gcloud netapp host-groups describe oracdb2-hg --project="${PROJECT}" \
+  --location=us-west1 --format='value(name)')
+
+gcloud netapp volumes update oracdb2_data --project="${PROJECT}" --location="${LOC_B}" \
+  --block-devices="name=oracdb1_data_lun,host-groups=${HG},os-type=LINUX"
+----
+Copia il file di controllo in  `oracdb2`, quindi sul primario:
+
+[source]
+----
+ALTER DATABASE END BACKUP;
+----
+
+
+==== Alternativa — snapshot seed
+
+Seed una tantum: snapshot sul volume sorgente → crea volume dallo snapshot nel pool di standby (Cloud Console o API). Procedi a <<oracle-finalize,Oracle finalizza>> dopo il collegamento a  `oracdb2-hg`.
+
+
+
+==== iSCSI e ASM in modalità standby (prima di RMAN)
+
+Su `oracdb2`, accedi ai portali iSCSI del *pool di standby*. Se le intestazioni del disco ASM corrispondono alla denominazione primaria, usa *alias multipath in stile primario* (lab: `ora_oracdb1_data_01`, `ora_oracdb1_arch_01`), imposta  `asm_diskstring='/dev/mapper/ora_oracdb1_*p*'`, `chown grid:asmadmin` sulle partizioni, quindi:
+
+[source]
+----
+ALTER DISKGROUP DATA MOUNT FORCE;
+ALTER DISKGROUP RECO MOUNT FORCE;
+ALTER DISKGROUP FRA MOUNT FORCE;
+----
+
+
+==== Oracle finalizza
+
+[source]
+----
+STARTUP NOMOUNT;
+RESTORE STANDBY CONTROLFILE FROM '/tmp/orcls_stby.ctl';
+ALTER DATABASE MOUNT;
+RECOVER DATABASE UNTIL SCN <quiesce_scn>;
+ALTER DATABASE CONVERT TO PHYSICAL STANDBY;
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+----
+Dopo la conversione, *ricostruire i log di redo di standby* (il file di controllo replicato ha ancora  `+DATA/ORCL/…` percorsi SRL — causa  `ORA-19527` /  `ORA-16086` sul primario). Vedere <<standby-redo-log-files,Passaggio 4: file di log di ripristino in standby>>.
+
+
+
+=== Passaggio 4: file di log di ripristino in standby
+
+Richiesto su *entrambi* gli host per FSFO. Dimensione ≥ redo online primario più grande; conteggio = (gruppi online per thread) + 1.
+
+*Dopo il seed GCNV:* Elimina tutti i gruppi di file di log di standby sullo standby e ricreali su  `+DATA` solo (`db_create_file_dest='+DATA'`). Percorsi replicati sotto  `+DATA/ORCL/…` causano  `ORA-19527` /  `ORA-16086` fino alla ricostruzione.
+
+*Primaria (`orcl`):*
+
+[source]
+----
+ALTER SYSTEM SET db_create_file_dest='+DATA' SCOPE=BOTH;
+ALTER DATABASE ADD STANDBY LOGFILE THREAD 1 ('+DATA') SIZE 1024M;
+-- repeat (online log groups + 1) times
+----
+*Standby (`orcls`) dopo il seed GCNV:*
+
+[source]
+----
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+ALTER SYSTEM SET standby_file_management=MANUAL SCOPE=BOTH;
+-- DROP STANDBY LOGFILE GROUP for each group# in v$standby_log;
+ALTER SYSTEM SET db_create_file_dest='+DATA' SCOPE=BOTH;
+ALTER SYSTEM SET standby_file_management=AUTO SCOPE=BOTH;
+ALTER DATABASE ADD STANDBY LOGFILE THREAD 1 ('+DATA') SIZE 1024M;
+-- repeat (online groups + 1) times; one member per group
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+----
+
+
+=== Passaggio 5: Abilitare Flashback sul dispositivo di standby e avviare il ripristino gestito
+
+Abilitare flashback *prima* di avviare il ripristino gestito (flashback non può essere abilitato mentre MRP è attivo).
+
+[source, bash]
+----
+# On oracdb2
+sudo -u oracle bash -c '
+. ~/.bash_profile
+export ORACLE_SID=orcls
+sqlplus / as sysdba <<SQL
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER SYSTEM SET db_flashback_retention_target=1440 SCOPE=BOTH;
+ALTER DATABASE FLASHBACK ON;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+EXIT
+SQL'
+----
+`USING CURRENT LOGFILE` abilita l'applicazione in real-time (il redo viene applicato non appena arriva negli SRL).
+
+
+
+=== Passaggio 6: Abilitare la spedizione dei redo sul primario
+
+[NOTE]
+====
+`LOG_ARCHIVE_DEST_2` è stato impostato deliberatamente su  `DEFER` in <<standby-init-ora-and-nomount,Passaggio 2: Standby: file pfile init.ora minimo, file password, NOMOUNT>> per sopprimere continui  `ORA-12154` errori durante la creazione dello standby. Abilitalo ora che lo standby è pronto.
+
+====
+Passa  `LOG_ARCHIVE_DEST_STATE_2` a  `ENABLE` e forza un cambio di registro in modo che il primo ciclo di redo venga eseguito immediatamente:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+. ~/.bash_profile
+sqlplus / as sysdba <<SQL
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE SCOPE=BOTH;
+ALTER SYSTEM SWITCH LOGFILE;
+ALTER SYSTEM ARCHIVE LOG CURRENT;
+SELECT dest_id, status, error FROM v$archive_dest_status WHERE dest_id IN (1,2);
+EXIT
+SQL
+'
+# Expected: dest_id=2, STATUS=VALID, ERROR null.
+----
+Se  `dest_2` mostra  `ORA-12154`, riavvia il primario. Dopo <<enable-broker-on-both-databases,Passaggio 1: Abilitare il broker su entrambi i database>>, gestisci il trasporto tramite DGMGRL.
+
+
+
+=== Passaggio 7: Verificare lo stato di Data Guard di destinazione
+
+Sul *primario* (`oracdb1`):
+
+[source, bash]
+----
+sudo -u oracle sqlplus -s / as sysdba \
+  <<<"SELECT database_role || ' | ' || open_mode FROM v\$database;"
+# Expected: PRIMARY | READ WRITE
+----
+In modalità *standby* (`oracdb2` — Cloud Console *SSH* o IAP dalla tua workstation):
+
+[source, bash]
+----
+gcloud compute ssh oracdb2 --tunnel-through-iap --zone=us-west1-b
+
+sudo -u oracle bash <<'BASH'
+. ~/.bash_profile
+export ORACLE_SID=orcls
+
+sqlplus -s / as sysdba <<'SQL'
+SELECT database_role || ' | ' || open_mode
+FROM v$database;
+
+SELECT process, status, sequence#
+FROM v$managed_standby
+WHERE process IN ('MRP0','RFS');
+
+EXIT
+SQL
+BASH
+----
+Previsto sullo standby: `PHYSICAL STANDBY | MOUNTED`; `MRP0` con `APPLYING_LOG`.
+
+Se lo standby segnala  `MOUNTED` ma l'apply non è in esecuzione, riavvia MRP su  `oracdb2`:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+. ~/.bash_profile
+export ORACLE_SID=orcls
+sqlplus / as sysdba <<SQL
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT FROM SESSION;
+EXIT
+SQL'
+----
+
+
+=== Passaggio 8: Registrare il database standby con Oracle Restart
+
+Registra lo standby con Riavvia dopo il seeding di GCNV in modo che i riavvii ripristinino ASM, MOUNT e apply.
+
+Su  `oracdb2`, acquisire la posizione dello spfile e registrarlo con Oracle Restart (sostituire  `<STANDBY_SPFILE_PATH>` dalla query, spesso sotto  `+DATA`):
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export ORACLE_SID=orcls
+sqlplus -s / as sysdba <<< "SHOW PARAMETER spfile;"
+'
+
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+
+srvctl add database \
+  -db orcls \
+  -dbname orcl \
+  -oraclehome /u01/app/oracle/product/26ai/db_1 \
+  -spfile <STANDBY_SPFILE_PATH> \
+  -pwfile /u01/app/oracle/product/26ai/db_1/dbs/orapworcls \
+  -role PHYSICAL_STANDBY \
+  -startoption MOUNT \
+  -stopoption IMMEDIATE \
+  -diskgroup DATA,RECO,FRA
+
+srvctl config database -db orcls
+srvctl status database -db orcls
+'
+----
+Su  `oracdb1`, verificare che la risorsa del database primario Oracle Restart elenchi le dipendenze del gruppo di dischi ASM. Aggiungere  `RECO` se DBCA è registrato solo  `DATA` e  `FRA`:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+srvctl config database -db orcl
+srvctl modify database -db orcl -diskgroup DATA,RECO,FRA
+srvctl config database -db orcl
+'
+----
+*Aggiungere lo stesso servizio dell'applicazione alla risorsa del database di standby* (`orcls` su  `oracdb2`). Utilizzare  `role PRIMARY` su entrambi i lati in modo che  `orclapp` sia disponibile dopo il passaggio di consegne:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+
+srvctl add service \
+  -db orcls \
+  -service orclapp \
+  -pdb orclpdb \
+  -role PRIMARY \
+  -policy AUTOMATIC
+
+srvctl config service -db orcls -service orclapp
+'
+----
+Su  `oracdb2`, confermare la risorsa del database di standby:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+srvctl status database -db orcls
+'
+----
+
+
+== Configurare Data Guard Broker, FSFO e Observer
+
+Successivamente  `ENABLE CONFIGURATION`, gestisci il trasporto e i ruoli tramite *DGMGRL* (non ad hoc  `LOG_ARCHIVE_DEST_*`SQL).
+
+
+
+=== Passaggio 1: Abilitare il broker su entrambi i database
+
+Sugli host del database *primario* e *di standby*:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+. ~/.bash_profile
+sqlplus / as sysdba <<SQL
+ALTER SYSTEM SET dg_broker_start=TRUE SCOPE=BOTH;
+EXIT
+SQL'
+----
+Sull'*host del database primario*, connettersi con l'autenticazione del sistema operativo (il wallet Observer da <<start-observer-systemd,Passaggio 5: Avviare l'Observer come unità systemd>> non è richiesto sugli host DB):
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export ORACLE_SID=orcl
+export PATH=$ORACLE_HOME/bin:$PATH
+dgmgrl /
+'
+----
+[NOTE]
+====
+Solo sull'host Observer, utilizzare  `dgmgrl /@orcl` dopo che il portafoglio di accesso automatico esiste. Non inserire le password sulla  `dgmgrl` riga di comando.
+
+====
+[source]
+----
+DGMGRL> CREATE CONFIGURATION 'orcl_dg' AS
+        PRIMARY DATABASE IS 'orcl' CONNECT IDENTIFIER IS orcl;
+DGMGRL> ADD DATABASE 'orcls' AS CONNECT IDENTIFIER IS orcls;
+DGMGRL> ENABLE CONFIGURATION;
+DGMGRL> SHOW CONFIGURATION;
+-- Expect: Configuration Status: SUCCESS, both members SUCCESS.
+----
+Eseguire `VALIDATE DATABASE` immediatamente: rileva file di dati orfani, SRL mancanti, redo apply non in esecuzione e altri problemi comuni prima di tentare un passaggio. Qualsiasi `WARNING` o valore non NULL `ERROR` deve essere corretto prima <<configure-fsfo-properties-and-enable,Passaggio 3: Configura le proprietà FSFO e abilita>>.
+
+[source]
+----
+DGMGRL> VALIDATE DATABASE 'orcls';
+DGMGRL> SHOW CONFIGURATION VERBOSE;
+----
+
+
+=== Passaggio 2: Conferma il flashback (necessario per il ripristino automatico di FSFO)
+
+Conferma  `flashback_on` su *entrambi* gli host prima di abilitare FSFO:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+. ~/.bash_profile
+sqlplus -s / as sysdba <<<"SELECT flashback_on FROM v\$database;"
+'
+# Expected on both hosts: YES
+----
+Solo sul *primario*, se la conservazione non è già impostata:
+
+[source, bash]
+----
+sudo -u oracle bash -c '
+. ~/.bash_profile
+export ORACLE_SID=orcl
+sqlplus / as sysdba <<SQL
+ALTER SYSTEM SET db_flashback_retention_target=1440 SCOPE=BOTH;
+EXIT
+SQL'
+----
+
+
+=== Passaggio 3: Configura le proprietà FSFO e abilita
+
+[source]
+----
+-- Transport mode and protection mode
+DGMGRL> EDIT DATABASE 'orcl'  SET PROPERTY LogXptMode='SYNC';
+DGMGRL> EDIT DATABASE 'orcls' SET PROPERTY LogXptMode='SYNC';
+DGMGRL> EDIT CONFIGURATION SET PROTECTION MODE AS MaxAvailability;
+
+-- FSFO targets (each side names the other)
+DGMGRL> EDIT DATABASE 'orcl'  SET PROPERTY FastStartFailoverTarget = 'orcls';
+DGMGRL> EDIT DATABASE 'orcls' SET PROPERTY FastStartFailoverTarget = 'orcl';
+
+-- 30 s = default; lower for faster RTO but more sensitive to network blips
+DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverThreshold = 30;
+DGMGRL> EDIT CONFIGURATION SET PROPERTY FastStartFailoverAutoReinstate = TRUE;
+
+DGMGRL> ENABLE FAST_START FAILOVER;
+DGMGRL> SHOW FAST_START FAILOVER;
+-- Expected: Threshold 30 seconds, Target orcls, Observer not yet registered.
+----
+
+
+=== Passaggio 4: Installare Oracle Instant Client sull'host Observer
+
+[source, bash]
+----
+# On oradg-obs, as root (use -el8 / -el9 if the Observer is on an older OL/RHEL)
+sudo dnf install -y oracle-instantclient-release-el10
+sudo dnf install -y oracle-instantclient-basic \
+                    oracle-instantclient-sqlplus \
+                    oracle-instantclient-tools
+
+# Dedicated 'oracle' OS user (owns the wallet and the systemd unit)
+sudo useradd -u 54321 -m oracle
+sudo passwd -l oracle
+
+# Oracle environment for the user
+sudo mkdir -p /etc/oracle/network/admin
+sudo chown -R oracle:oracle /etc/oracle
+sudo -u oracle tee /home/oracle/.bash_profile >/dev/null <<'EOF'
+export ORACLE_HOME=/usr/lib/oracle/26/client64
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib
+export PATH=$ORACLE_HOME/bin:$PATH
+export TNS_ADMIN=/etc/oracle/network/admin
+EOF
+
+# tnsnames.ora — must reach both DB hosts on TCP/1521
+sudo tee /etc/oracle/network/admin/tnsnames.ora >/dev/null <<'EOF'
+orcl =
+  (DESCRIPTION =
+  (ADDRESS = (PROTOCOL = TCP)(HOST = oracdb1)(PORT = 1521))
+                (CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = orcl)))
+orcls =
+  (DESCRIPTION =
+  (ADDRESS = (PROTOCOL = TCP)(HOST = oracdb2)(PORT = 1521))
+                (CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = orcls)))
+EOF
+sudo chown oracle:oracle /etc/oracle/network/admin/tnsnames.ora
+----
+
+
+=== Passaggio 5: Avviare l'Observer come unità systemd
+
+Le credenziali risiedono in un portafoglio di accesso automatico — mai sulla  `dgmgrl` riga di comando (visibile a  `ps`/ `journalctl`). Connettiti con  `/@<tns_alias>` solo sull'Observer.
+
+[NOTE]
+====
+* *Utilizzare un account dedicato:* Archiviare le credenziali per un account amministrativo Data Guard dedicato (ad esempio, `SYSDG`) nel portafoglio anziché `SYS`.
+* *È richiesto un portafoglio per l'accesso automatico:* Il servizio Observer systemd richiede un portafoglio per l'accesso automatico  `cwallet.sso`). Se  `cwallet.sso` manca dopo l'esecuzione di  `mkstore`, utilizzare  `orapki` dal pacchetto *tools* di Instant Client o da una database home per creare il portafoglio per l'accesso automatico, quindi aggiungere nuovamente le credenziali memorizzate.
+
+
+====
+. Crea il portafoglio sull'Observer con le credenziali di entrambi i membri:
+
+
+[source, bash]
+----
+sudo -iu oracle bash <<'BASH'
+mkdir -p $TNS_ADMIN/wallet
+mkstore -wrl $TNS_ADMIN/wallet -create     # prompts for a wallet password — store in your secrets manager
+mkstore -wrl $TNS_ADMIN/wallet -createCredential orcl  sys ChangeMe!1
+mkstore -wrl $TNS_ADMIN/wallet -createCredential orcls sys ChangeMe!1
+BASH
+
+sudo tee /etc/oracle/network/admin/sqlnet.ora >/dev/null <<'EOF'
+WALLET_LOCATION = (SOURCE = (METHOD = FILE) (METHOD_DATA = (DIRECTORY = /etc/oracle/network/admin/wallet)))
+SQLNET.WALLET_OVERRIDE = TRUE
+EOF
+sudo chown oracle:oracle /etc/oracle/network/admin/sqlnet.ora
+sudo chmod -R 0700 /etc/oracle/network/admin/wallet
+
+sudo -iu oracle ls -l /etc/oracle/network/admin/wallet
+# Expected: cwallet.sso and ewallet.p12
+
+sudo -iu oracle bash <<'BASH'
+sqlplus -L "/@orcl as sysdba" <<'SQL'
+SELECT database_role FROM v$database;
+EXIT
+SQL
+BASH
+
+sudo -iu oracle bash <<'BASH'
+sqlplus -L "/@orcls as sysdba" <<'SQL'
+SELECT database_role FROM v$database;
+EXIT
+SQL
+BASH
+
+sudo -iu oracle dgmgrl /@orcl  'SHOW CONFIGURATION;'
+sudo -iu oracle dgmgrl /@orcls 'SHOW CONFIGURATION;'
+----
+[source, bash]
+----
+sudo -iu oracle orapki wallet create \
+  -wallet /etc/oracle/network/admin/wallet \
+  -auto_login
+sudo -iu oracle ls -l /etc/oracle/network/admin/wallet
+# Expected: cwallet.sso and ewallet.p12
+----
+. Unità Systemd + rotazione dei log:
+
+
+[source, ini]
+----
+sudo tee /etc/systemd/system/dgmgrl-observer.service >/dev/null <<'EOF'
+[Unit]
+Description=Oracle Data Guard Fast-Start Failover Observer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=oracle
+Group=oracle
+Environment=ORACLE_HOME=/usr/lib/oracle/26/client64
+Environment=LD_LIBRARY_PATH=/usr/lib/oracle/26/client64/lib
+Environment=TNS_ADMIN=/etc/oracle/network/admin
+Environment=PATH=/usr/lib/oracle/26/client64/bin:/usr/bin:/bin
+ExecStart=/usr/lib/oracle/26/client64/bin/dgmgrl -silent /@orcl "START OBSERVER FILE IS '/var/lib/oracle/dgmgrl-observer.dat'"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+----
+[source, bash]
+----
+sudo install -d -o oracle -g oracle -m 0755 /var/lib/oracle
+sudo install -o oracle -g oracle -m 0640 /dev/null /var/log/dgmgrl-observer.log
+
+sudo tee /etc/logrotate.d/dgmgrl-observer >/dev/null <<'EOF'
+/var/log/dgmgrl-observer.log {
+    weekly
+    rotate 8
+    compress delaycompress missingok notifempty
+    create 0640 oracle oracle
+    copytruncate
+}
+EOF
+
+sudo systemctl daemon-reload && sudo systemctl enable --now dgmgrl-observer.service
+sudo systemctl status dgmgrl-observer.service
+----
+Verificare dal primario — L'Observer deve leggere `CONNECTED` (un `DISCONNECTED` Observer sospende silenziosamente FSFO):
+
+[source]
+----
+DGMGRL> SHOW FAST_START FAILOVER;
+DGMGRL> SHOW CONFIGURATION;       -- Configuration Status: SUCCESS, FSFO: ENABLED
+----
+
+
+=== Passaggio 6: Testare FSFO (switchover e failover)
+
+*Passaggio programmato:*
+
+[source]
+----
+DGMGRL> VALIDATE DATABASE 'orcls';
+DGMGRL> SWITCHOVER TO 'orcls';
+DGMGRL> SHOW CONFIGURATION;
+DGMGRL> SWITCHOVER TO 'orcl';        -- restore topology
+----
+*Failover non pianificato:* Utilizzare un *Reset* della VM (test in stile crash) in una finestra di test; un normale *Stop* potrebbe non attivare FSFO. Tail `/var/log/dgmgrl-observer.log` on `oradg-obs`; ripristinare la topologia al termine.
