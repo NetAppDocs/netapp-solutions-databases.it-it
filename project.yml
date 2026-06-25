@@ -119,11 +119,7 @@ sidebar:
       - title: 'Panoramica: database Oracle con Google Cloud NetApp Volumes'
         pdf-filename: 'Panoramica: Oracle Database con Google Cloud NetApp Volumes'
         url: "/oracle/gcp-oracle-gcnv-overview.html"
-      - title: Implementa l'alta disponibilità del database Oracle 26ai con Google
-          Cloud NetApp Volumes
-        pdf-filename: Implementa Oracle Database 26ai ad alta disponibilità con Google
-          Cloud NetApp Volumes
-        url: "/oracle/gcnv-oracle-deployment.html"
+      - section: gcnv-oracle
     - title: Cloud locale e ibrido
       entries:
       - title: Distribuzione e protezione di Oracle RAC in VCF con vVols

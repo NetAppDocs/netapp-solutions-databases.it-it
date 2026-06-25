@@ -2,7 +2,7 @@
 sidebar: sidebar 
 permalink: mssql/sql-srv-anf-factors-to-consider.html 
 keywords: performance, redundancy, high availability, storage configuration, continuously available shares, validation, 
-summary: In questa sezione vengono descritti i diversi aspetti da considerare quando Azure NetApp Files con SQL Server nel cloud. 
+summary: Questa sezione descrive le diverse problematiche da considerare quando usi Azure NetApp Files con SQL Server nel cloud. 
 ---
 = Fattori da considerare
 :hardbreaks:
@@ -65,7 +65,7 @@ I vantaggi dell'utilizzo di Azure NetApp Files per SQL Server includono quanto s
 *Note:*
 
 * Per aumentare la ridondanza e l'elevata disponibilità, le VM di SQL Server dovrebbero trovarsi nella stessa https://docs.microsoft.com/en-us/azure/virtual-machines/availability-set-overview["set di disponibilità"^] o in modo diverso https://docs.microsoft.com/en-us/azure/availability-zones/az-overview["zone di disponibilità"^] .  Se sono richiesti file di dati definiti dall'utente, considerare i requisiti del percorso dei file; in tal caso, selezionare SQL FCI anziché SQL AOAG.
-* È supportato il seguente percorso UNC: file:///\\ANFSMB-b4ca.anf.test\SQLDB%20and%20\\ANFSMB-b4ca.anf.test\SQLDB\["\\ANFSMB-b4ca.anf.test\SQLDB e \\ANFSMB-b4ca.anf.test\SQLDB\"^] .
+* Sono supportati i seguenti percorsi UNC: `\\ANFSMB-b4ca.anf.test\SQLDB` e `\\ANFSMB-b4ca.anf.test\SQLDB\`.
 * Il percorso UNC loopback non è supportato.
 * Per il dimensionamento, utilizzare i dati storici dell'ambiente locale.  Per i carichi di lavoro OLTP, abbinare gli IOPS target ai requisiti di prestazioni utilizzando i carichi di lavoro in orari medi e di picco insieme ai contatori delle prestazioni di letture/sec e scritture/sec su disco.  Per i carichi di lavoro di data warehouse e reporting, abbinare la velocità effettiva target utilizzando i carichi di lavoro in orari medi e di picco e i byte di lettura/sec del disco e i byte di scrittura/sec del disco.  I valori medi possono essere utilizzati insieme alle capacità di rimodellamento del volume.
 

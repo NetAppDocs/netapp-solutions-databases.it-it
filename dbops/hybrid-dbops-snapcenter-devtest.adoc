@@ -1,10 +1,10 @@
 ---
 sidebar: sidebar 
 permalink: dbops/hybrid-dbops-snapcenter-devtest.html 
-summary: 'L"agilità del cloud pubblico, il time-to-value e il risparmio sui costi sono tutte proposte di valore significative per le aziende che adottano il cloud pubblico per lo sviluppo e il testing delle applicazioni di database.  Non esiste strumento migliore di SnapCenter per trasformare tutto questo in realtà in poco tempo.  SnapCenter non solo può proteggere il tuo database di produzione in locale, ma può anche clonarne rapidamente una copia per lo sviluppo di applicazioni o per il test del codice nel cloud pubblico, consumando pochissimo spazio di archiviazione aggiuntivo.  Di seguito sono riportati i dettagli dei processi passo passo che utilizzano lo strumento.' 
-keywords: hybrid cloud, database, solutions, dev/test, workflow 
+summary: 'L"agilità del cloud pubblico, la rapidità di implementazione e il risparmio sui costi rappresentano tutti elementi di valore significativi per le aziende che adottano il cloud pubblico per lo sviluppo e il test di applicazioni di database.' 
+keywords: hybrid cloud, database, solutions, devtest, workflow 
 ---
-= Flusso di lavoro per lo sviluppo/test che si espande nel cloud
+= Flusso di lavoro per il bursting di devtest sul cloud
 :hardbreaks:
 :allow-uri-read: 
 :nofooter: 
