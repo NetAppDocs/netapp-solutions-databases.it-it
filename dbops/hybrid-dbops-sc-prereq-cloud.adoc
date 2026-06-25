@@ -18,6 +18,7 @@ Prima di installare il connettore Cloud Manager e Cloud Volumes ONTAP e configur
 
 
 
+[[cloud-manager-and-cloud-volumes-ontap-deployment-prerequisites-checklist]]
 == Elenco di controllo dei prerequisiti per la distribuzione di Cloud Manager e Cloud Volumes ONTAP
 
 * Un accesso a NetApp Cloud Central
@@ -31,10 +32,12 @@ Per maggiori informazioni su ciò di cui hai bisogno per iniziare, visita il nos
 
 
 
+[[considerations]]
 == Considerazioni
 
 
 
+[[1-what-is-a-cloud-manager-connector]]
 === 1. Che cos'è un connettore Cloud Manager?
 
 Nella maggior parte dei casi, l'amministratore di un account Cloud Central deve distribuire un connettore nel cloud o nella rete locale.  Il connettore consente a Cloud Manager di gestire risorse e processi all'interno del tuo ambiente cloud pubblico.
@@ -43,6 +46,7 @@ Per maggiori informazioni sui connettori, visita il nostro https://docs.netapp.c
 
 
 
+[[2-cloud-volumes-ontap-sizing-and-architecture]]
 === 2. Dimensionamento e architettura Cloud Volumes ONTAP
 
 Quando si distribuisce Cloud Volumes ONTAP, è possibile scegliere tra un pacchetto predefinito o la creazione di una configurazione personalizzata.  Sebbene molti di questi valori possano essere modificati in un secondo momento senza interruzioni, ci sono alcune decisioni chiave che devono essere prese prima della distribuzione in base ai carichi di lavoro da distribuire nel cloud.
@@ -60,6 +64,7 @@ Se desideri ulteriori informazioni, leggi la documentazione sulla pianificazione
 
 
 
+[[3-single-node-or-high-availability]]
 === 3. Nodo singolo o alta disponibilità?
 
 In tutti i cloud è possibile distribuire CVO in un singolo nodo o in una coppia ad alta disponibilità in cluster con due nodi.  A seconda del caso d'uso, potrebbe essere opportuno distribuire un singolo nodo per risparmiare sui costi oppure una coppia HA per garantire maggiore disponibilità e ridondanza.

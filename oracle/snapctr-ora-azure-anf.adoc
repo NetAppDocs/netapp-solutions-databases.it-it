@@ -20,6 +20,7 @@ Questa soluzione fornisce una panoramica e dettagli per la distribuzione automat
 
 
 
+[[purpose]]
 == Scopo
 
 Il software NetApp SnapCenter software è una piattaforma aziendale di facile utilizzo per coordinare e gestire in modo sicuro la protezione dei dati su applicazioni, database e file system.  Semplifica la gestione del ciclo di vita di backup, ripristino e clonazione delegando queste attività ai proprietari delle applicazioni senza sacrificare la capacità di supervisionare e regolare le attività sui sistemi di archiviazione.  Sfruttando la gestione dei dati basata sull'archiviazione, consente di aumentare le prestazioni e la disponibilità, nonché di ridurre i tempi di test e sviluppo.
@@ -34,6 +35,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -46,18 +48,21 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente di test e convalida della soluzione
 
 I test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio che potrebbe non corrispondere all'ambiente di distribuzione finale.  Vedi la sezione<<Fattori chiave per la considerazione dell'implementazione>> per maggiori informazioni.
 
 
 
+[[architecture]]
 === Architettura
 
 image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadro dettagliato della configurazione di distribuzione di Oracle nel cloud pubblico AWS con iSCSI e ASM."]
 
 
 
+[[hardware-and-software-components]]
 === Componenti hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -104,6 +109,7 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 |===
 
 
+[[oracle-database-configuration-in-the-lab-environment]]
 === Configurazione del database Oracle nell'ambiente di laboratorio
 
 [cols="33%, 33%, 33%"]
@@ -123,6 +129,7 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fattori chiave per la considerazione dell'implementazione
 
 * * Distribuzione SnapCenter .*  SnapCenter può essere distribuito in un dominio Windows o in un ambiente Workgroup.  Per la distribuzione basata su dominio, l'account utente del dominio deve essere un account amministratore del dominio oppure l'utente del dominio deve appartenere al gruppo dell'amministratore locale sul server di hosting SnapCenter .
@@ -134,12 +141,14 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 Le sezioni seguenti forniscono procedure dettagliate per la distribuzione, la configurazione e il backup, il ripristino e la clonazione SnapCenter , nonché per il database Oracle su Azure NetApp Files nel cloud di Azure.
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible%open]
@@ -194,6 +203,7 @@ video::960fb370-c6e0-4406-b6d5-b110014130e8[panopto,width=360]
 ====
 
 
+[[snapcenter-installation-and-setup]]
 === Installazione e configurazione SnapCenter
 
 [%collapsible%open]
@@ -247,6 +257,7 @@ image:snapctr-ora-azure-anf-setup-005.png["Questa immagine fornisce le impostazi
 ====
 
 
+[[database-backup]]
 === Backup del database
 
 [%collapsible%open]
@@ -306,6 +317,7 @@ image:snapctr-ora-azure-anf-bkup-013.png["Questa immagine fornisce il backup del
 ====
 
 
+[[database-recovery]]
 === Recupero del database
 
 [%collapsible%open]
@@ -349,6 +361,7 @@ image:snapctr-ora-azure-anf-restore-008.png["Questa immagine fornisce il riprist
 ====
 
 
+[[database-clone]]
 === Clonazione del database
 
 [%collapsible%open]
@@ -516,6 +529,7 @@ SQL> alter pluggable database all open;
 ====
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:

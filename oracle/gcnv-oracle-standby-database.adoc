@@ -15,6 +15,8 @@ Crea il database Oracle physical standby utilizzando la replica a livello di sto
 
 
 
+[[step-1-configure-listener-and-data-guard-parameters]]
+[[primary-sys-password-and-dg-params]]
 == Passaggio 1: Configura i parametri del listener e di Data Guard
 
 Configura il listener su entrambi gli host del database per supportare le connessioni Data Guard, incluso il  `_DGMGRL` servizio necessario per il broker. Configura il file delle password e i parametri del log di archivio sul database primario.
@@ -61,6 +63,8 @@ $GRID_HOME/bin/lsnrctl status
 
 
 
+[[step-2-prepare-standby-pfile-and-nomount]]
+[[standby-init-ora-and-nomount]]
 == Passaggio 2: Prepara il pfile di standby e NOMOUNT
 
 Prepara l'istanza del database di standby copiando il file delle password dalla primaria, creando un file pfile init.ora minimale con i parametri di Data Guard e avviando l'istanza in modalità NOMOUNT.
@@ -140,6 +144,8 @@ L'istanza di standby è ora in modalità NOMOUNT senza file di dati fino a <<gcn
 
 
 
+[[step-3-initialize-standby-storage-with-gcnv]]
+[[gcnv-standby-initialization]]
 == Passaggio 3: Inizializza lo storage di standby con GCNV
 
 Inserisci i volumi di standby in  `oracle-pool-b`, collegali a  `oracdb2`, monta i gruppi di dischi ASM e finalizza l'istanza di standby allo stato MOUNT.
@@ -148,6 +154,7 @@ Utilizza la replica GCNV per il seeding in produzione e il seeding snapshot per 
 
 
 
+[[choose-the-seeding-path]]
 === Scegli il percorso di seeding
 
 Scegli il metodo di seeding di standby in base al tuo ambiente e ai requisiti di recovery.
@@ -160,6 +167,8 @@ Tutti i percorsi si ricongiungono in <<standby-iscsi-and-asm-before-rman,Monta i
 
 
 
+[[check-prerequisites]]
+[[gcnv-seed-prereqs]]
 === Verifica i prerequisiti
 
 Conferma i seguenti prerequisiti prima di eseguire il seeding dei volumi di standby.
@@ -190,6 +199,8 @@ gcloud netapp storage-pools create oracle-pool-b \
 
 
 
+[[create-and-sync-replications]]
+[[create-volume-replications]]
 === Crea e sincronizza le repliche
 
 Crea relazioni di replica dai volumi primari ai volumi di standby, poi aspetta che la sincronizzazione iniziale sia completata.
@@ -212,6 +223,8 @@ Attendi finché  `mirrorState` è  `MIRRORED` e la sincronizzazione iniziale è 
 
 
 
+[[cut-over-and-attach-standby-volumes]]
+[[cutover-quiesce-stop-repl-attach]]
 === Passa e collega i volumi di standby
 
 Metti in pausa il server primario, interrompi la replica dopo la sincronizzazione finale e collega i volumi di destinazione al gruppo host di standby.
@@ -252,6 +265,8 @@ ALTER DATABASE END BACKUP;
 ----
 
 
+[[seed-from-snapshot]]
+[[snapshot-seed]]
 === Seed dallo snapshot
 
 Usa questo percorso per l'avvio una tantum in laboratorio quando la replica continua non è richiesta.
@@ -260,6 +275,8 @@ Per un'istanza di test una tantum, crea uno snapshot di origine e crea volumi di
 
 
 
+[[mount-standby-asm-disk-groups]]
+[[standby-iscsi-and-asm-before-rman]]
 === Monta i gruppi di dischi ASM di standby
 
 Sull'host di standby, scopri i percorsi di storage collegati e monta i gruppi di dischi ASM prima del recovery del database.
@@ -274,6 +291,8 @@ ALTER DISKGROUP FRA MOUNT FORCE;
 ----
 
 
+[[finalize-the-standby-instance]]
+[[oracle-finalize]]
 === Finalizza l'istanza di standby
 
 Ripristina il file di controllo di standby, esegui il ripristino sull'SCN acquisito, converti in standby fisico e avvia il ripristino gestito.
@@ -299,6 +318,8 @@ A questo punto, lo standby dovrebbe essere  `PHYSICAL STANDBY` e  `MOUNTED` con 
 
 
 
+[[step-4-register-standby-with-oracle-restart]]
+[[register-standby-with-oracle-restart]]
 == Passaggio 4: registra lo standby con Oracle Restart
 
 Registra il database standby con Oracle Restart così i riavvii recuperano automaticamente i gruppi di dischi ASM, montano il database standby e riavviano il ripristino gestito. Aggiungi anche il servizio dell'applicazione a entrambe le risorse del database.
@@ -379,6 +400,7 @@ srvctl status database -db orcls
 
 
 
+[[whats-next]]
 == E ora?
 
 *Specifico per livello:*

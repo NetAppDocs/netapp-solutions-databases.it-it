@@ -20,6 +20,7 @@ La soluzione fornisce un toolkit di automazione basato su Ansible per la configu
 
 
 
+[[purpose]]
 == Scopo
 
 I clienti apprezzano la funzione FlexClone dello storage NetApp ONTAP per clonare rapidamente (in pochi minuti) grandi database e risparmiare ulteriormente sullo storage se la funzione thin clone è abilitata sulla specifica offerta di storage in un data center privato o in un cloud pubblico.  Questo toolkit basato su Ansible automatizza la configurazione, la clonazione e l'aggiornamento dei database Oracle clonati secondo una pianificazione, utilizzando le utilità della riga di comando NetApp SnapCenter per una gestione semplificata del ciclo di vita.  Il toolkit si applica ai database Oracle distribuiti su storage ONTAP in locale o su cloud pubblico (AWS o Azure) e gestiti dallo strumento NetApp SnapCenter UI.
@@ -32,6 +33,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -43,6 +45,7 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[license]]
 == Licenza
 
 Accedendo, scaricando, installando o utilizzando il contenuto di questo repository GitHub, accetti i termini della licenza stabiliti inlink:https://github.com/NetApp/na_ora_hadr_failover_resync/blob/master/LICENSE.TXT["File di licenza"^] .
@@ -52,10 +55,12 @@ NOTE: Esistono alcune restrizioni relative alla produzione e/o alla condivisione
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible%open]
@@ -89,6 +94,7 @@ NOTE: Per semplificare, il server Oracle di destinazione del clone dovrebbe esse
 ====
 
 
+[[download-the-toolkit]]
 === Scarica il toolkit
 
 [%collapsible%open]
@@ -103,6 +109,7 @@ NOTE: Al momento, l'accesso al toolkit è consentito solo agli utenti interni Ne
 ====
 
 
+[[ansible-target-hosts-file-configuration]]
 === Configurazione del file host di destinazione Ansible
 
 [%collapsible%open]
@@ -120,6 +127,7 @@ ora_04.cie.netapp.com ansible_host=10.61.180.29 ansible_ssh_private_key_file=ora
 ====
 
 
+[[global-variables-configuration]]
 === Configurazione delle variabili globali
 
 [%collapsible%open]
@@ -138,6 +146,7 @@ snapctr_pwd: 'xxxxxxxx'
 ====
 
 
+[[host-variables-configuration]]
 === Configurazione delle variabili host
 
 [%collapsible%open]
@@ -158,6 +167,7 @@ clone_db_sid: NTAP1DEV
 ====
 
 
+[[additional-clone-target-oracle-server-configuration]]
 === Configurazione aggiuntiva del server Oracle di destinazione del clone
 
 [%collapsible%open]
@@ -179,6 +189,7 @@ export ORACLE_HOME=/u01/app/oracle/product/19.0.0/NTAP1
 ====
 
 
+[[playbook-execution]]
 === Esecuzione del playbook
 
 [%collapsible%open]
@@ -213,6 +224,7 @@ Per un database clone aggiuntivo, creare un file clone_n_setup.yml e un file clo
 ====
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sull'automazione della soluzione NetApp , consultare il seguente sito Weblink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automazione delle soluzioni NetApp ^"^]

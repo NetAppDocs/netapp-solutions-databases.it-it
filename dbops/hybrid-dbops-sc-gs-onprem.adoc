@@ -18,10 +18,12 @@ Lo strumento NetApp SnapCenter utilizza il controllo degli accessi basato sui ru
 
 
 
+[[on-premises]]
 == In sede
 
 
 
+[[1-setup-database-admin-user-in-snapcenter]]
 === 1. Imposta l'utente amministratore del database in SnapCenter
 
 Ha senso avere un ID utente amministratore dedicato per ogni piattaforma di database supportata da SnapCenter per il backup, il ripristino e/o il ripristino di emergenza del database.  È anche possibile utilizzare un unico ID per gestire tutti i database.  Nei nostri casi di prova e nella dimostrazione, abbiamo creato un utente amministratore dedicato rispettivamente per Oracle e SQL Server.
@@ -39,6 +41,7 @@ image:snapctr-admin-users.png["Figura che mostra il dialogo di input/output o ch
 
 
 
+[[2-snapcenter-plugin-installation-prerequisites]]
 === 2. Prerequisiti per l'installazione del plugin SnapCenter
 
 SnapCenter esegue backup, ripristino, clonazione e altre funzioni utilizzando un agente plugin in esecuzione sugli host DB.  Si connette all'host del database e al database tramite credenziali configurate nella scheda Impostazioni e credenziali per l'installazione dei plugin e altre funzioni di gestione.  Esistono requisiti di privilegi specifici in base al tipo di host di destinazione, ad esempio Linux o Windows, nonché al tipo di database.
@@ -70,6 +73,7 @@ Host Unix per Oracle:
 
 
 
+[[3-snapcenter-host-plugin-installation]]
 === 3. Installazione del plugin host SnapCenter
 
 
@@ -161,6 +165,7 @@ image:snapctr-add-linux-host-006.png["Figura che mostra il dialogo di input/outp
 
 
 
+[[4-database-resource-discovery]]
 === 4. Scoperta delle risorse del database
 
 Una volta installato correttamente il plugin, le risorse del database sull'host possono essere immediatamente scoperte.  Fare clic sulla scheda Risorse nel menu a sinistra.  A seconda del tipo di piattaforma di database, sono disponibili diverse viste, ad esempio quella del database, del gruppo di risorse e così via.  Potrebbe essere necessario fare clic sulla scheda Aggiorna risorse se le risorse sull'host non vengono rilevate e visualizzate.
@@ -185,6 +190,7 @@ image:snapctr-add-windows-host-011.png["Figura che mostra il dialogo di input/ou
 
 
 
+[[5-setup-storage-cluster-peering-and-db-volumes-replication]]
 === 5. Configurazione del peering del cluster di archiviazione e della replica dei volumi DB
 
 Per proteggere i dati del database locale utilizzando un cloud pubblico come destinazione, i volumi del database del cluster ONTAP locale vengono replicati sul CVO del cloud utilizzando la tecnologia NetApp SnapMirror .  I volumi di destinazione replicati possono quindi essere clonati per DEV/OPS o per il ripristino di emergenza.  I seguenti passaggi di alto livello consentono di configurare il peering del cluster e la replica dei volumi DB.
@@ -226,6 +232,7 @@ image:snapctr-vol-snapmirror-003.png["Figura che mostra il dialogo di input/outp
 
 
 
+[[6-add-cvo-database-storage-svm-to-snapcenter]]
 === 6. Aggiungere l'SVM di archiviazione del database CVO a SnapCenter
 
 . Accedi a SnapCenter con un ID utente con privilegi SnapCenterAdmin.
@@ -245,6 +252,7 @@ image:snapctr-add-cvo-svm-003.png["Figura che mostra il dialogo di input/output 
 
 
 
+[[7-setup-database-backup-policy-in-snapcenter]]
 === 7. Imposta la policy di backup del database in SnapCenter
 
 Le seguenti procedure illustrano come creare un criterio di backup completo del database o del file di registro.  La politica può quindi essere implementata per proteggere le risorse dei database.  L'obiettivo del punto di ripristino (RPO) o l'obiettivo del tempo di ripristino (RTO) determinano la frequenza dei backup del database e/o del log.
@@ -392,6 +400,7 @@ image:snapctr-sql-policy-log-006.png["Figura che mostra il dialogo di input/outp
 
 
 
+[[8-implement-backup-policy-to-protect-database]]
 === 8. Implementare una politica di backup per proteggere il database
 
 SnapCenter utilizza un gruppo di risorse per eseguire il backup di un database in un raggruppamento logico di risorse del database, ad esempio più database ospitati su un server, un database che condivide gli stessi volumi di archiviazione, più database che supportano un'applicazione aziendale e così via.  La protezione di un singolo database crea un gruppo di risorse a sé stante.  Le seguenti procedure illustrano come implementare una policy di backup creata nella sezione 7 per proteggere i database Oracle e SQL Server.
@@ -542,6 +551,7 @@ image:snapctr-sql-rgroup-log-007.png["Figura che mostra il dialogo di input/outp
 
 
 
+[[9-validate-backup]]
 === 9. Convalida il backup
 
 Dopo aver creato i gruppi di risorse di backup del database per proteggere le risorse del database, i processi di backup vengono eseguiti in base alla pianificazione predefinita.  Controllare lo stato di esecuzione del lavoro nella scheda Monitor.

@@ -31,12 +31,14 @@ La clonazione del database crea una replica di un database primario su un host E
 
 
 
+[[taking-a-snapshot]]
 == Scattare un'istantanea
 
 Un database Oracle EC2/FSx viene sottoposto a backup periodico a intervalli configurati dall'utente.  Un utente può anche effettuare un backup snapshot una tantum in qualsiasi momento.  Ciò si applica sia ai backup di snapshot completi del database sia ai backup di snapshot solo del registro di archivio.
 
 
 
+[[taking-a-full-database-snapshot]]
 === Esecuzione di uno snapshot completo del database
 
 Uno snapshot completo del database include tutti i file Oracle, inclusi i file di dati, i file di controllo e i file di registro di archivio.
@@ -63,6 +65,7 @@ image:aws-rds-custom-deploy-snp-013.png["Figura che mostra il dialogo di input/o
 
 
 
+[[taking-an-archive-log-snapshot]]
 === Acquisizione di uno snapshot del registro di archivio
 
 Uno snapshot del log di archivio viene eseguito solo per il volume del log di archivio Oracle.
@@ -89,6 +92,7 @@ image:aws-rds-custom-deploy-snp-016.png["Figura che mostra il dialogo di input/o
 
 
 
+[[restoring-to-a-point-in-time]]
 == Ripristino a un punto nel tempo
 
 Il ripristino basato su SnapCenter in un punto nel tempo viene eseguito sullo stesso host dell'istanza EC2.  Per eseguire il ripristino, completare i seguenti passaggi:
@@ -160,6 +164,7 @@ image:aws-rds-custom-deploy-snp-029-b.png["Figura che mostra il dialogo di input
 
 
 
+[[creating-a-database-clone]]
 == Creazione di un clone del database
 
 Nella sezione seguente viene illustrato come utilizzare il flusso di lavoro di clonazione SnapCenter per creare un clone di database da un database primario a un'istanza EC2 di standby.
@@ -247,6 +252,7 @@ NOTE: Invece di copie di backup primarie di Oracle, è anche possibile creare un
 
 
 
+[[ha-failover-to-standby-and-resync]]
 == Failover HA in standby e risincronizzazione
 
 Il cluster Oracle HA di standby garantisce elevata disponibilità in caso di guasto nel sito primario, sia nel livello di elaborazione che in quello di archiviazione.  Uno dei vantaggi più significativi della soluzione è che l'utente può testare e convalidare l'infrastruttura in qualsiasi momento e con qualsiasi frequenza.  Il failover può essere simulato dall'utente o attivato da un guasto reale.  I processi di failover sono identici e possono essere automatizzati per un rapido ripristino delle applicazioni.

@@ -20,6 +20,7 @@ Questa soluzione fornisce una panoramica e i dettagli per la distribuzione di Or
 
 
 
+[[purpose]]
 == Scopo
 
 Eseguire carichi di lavoro Oracle esigenti in termini di performance e sensibili alla latenza nel cloud può essere una sfida. Google Cloud NetApp Volumes (GCNV) semplifica la migrazione e l'esecuzione di carichi di lavoro Oracle impegnativi per i professionisti delle line-of-business (LOB) aziendali e dello storage senza modifiche al codice. Google Cloud NetApp Volumes è ampiamente utilizzato come servizio sottostante di file-storage condiviso in vari scenari, come nuove implementazioni o migrazioni (lift and shift) di database Oracle da ambienti on-premises a Google Cloud.
@@ -34,6 +35,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -46,18 +48,21 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente di test e convalida della soluzione
 
 I test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio che potrebbe non corrispondere all'ambiente di distribuzione finale.  Vedi la sezione<<Fattori chiave per la considerazione dell'implementazione>> per maggiori informazioni.
 
 
 
+[[architecture]]
 === Architettura
 
 image:gcp-ora-gcnv-si-nfs-architecture.png["Questa immagine fornisce un quadro dettagliato della configurazione di distribuzione di Oracle in Google Cloud con NFS e Google Cloud NetApp Volumes."]
 
 
 
+[[hardware-and-software-components]]
 === Componenti hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -92,6 +97,7 @@ image:gcp-ora-gcnv-si-nfs-architecture.png["Questa immagine fornisce un quadro d
 |===
 
 
+[[oracle-database-configuration-in-the-lab-environment]]
 === Configurazione del database Oracle nell'ambiente di laboratorio
 
 [cols="33%, 33%, 33%"]
@@ -111,6 +117,7 @@ image:gcp-ora-gcnv-si-nfs-architecture.png["Questa immagine fornisce un quadro d
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fattori chiave per la considerazione dell'implementazione
 
 * *Livello di servizio e throughput del pool di storage GCNV.* GCNV offre quattro diversi livelli di servizio: Standard, Premium, Extreme e Flex. Per i livelli di servizio Standard, Premium ed Extreme, il throughput IO è determinato e fissato in base alla dimensione di un volume DB. Il throughput IO totale è limitato in base al dimensionamento del pool di storage. Per il livello di servizio Flex, il throughput IO non è fissato in base alla dimensione di un volume DB, ma è condiviso tra tutti i volumi DB ed è limitato al livello di dimensionamento del pool di storage. Questo consente di gestire database con volumi più piccoli e occasionali picchi di IOPS. A titolo di riferimento, i livelli di servizio Standard, Premium ed Extreme forniscono rispettivamente 16 KiB/s per GiB, 64 KiB/s per GiB e 128 KiB/s per GiB di throughput. Il livello di servizio Flex, invece, offre fino a 5 GiB/s per pool di storage con impostazione delle performance personalizzata. È importante dimensionare correttamente il livello di servizio e il pool di storage in base al throughput IO previsto e ai requisiti di IOPS del carico di lavoro del database Oracle.
@@ -122,12 +129,14 @@ image:gcp-ora-gcnv-si-nfs-architecture.png["Questa immagine fornisce un quadro d
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 Le sezioni seguenti forniscono procedure dettagliate per la distribuzione automatizzata di Oracle 21c e per il backup, il ripristino e la clonazione del database su Google Cloud NetApp Volumes, con volumi di database montati direttamente tramite NFS su VM di Google Cloud Compute Engine come database server.
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible]
@@ -170,6 +179,7 @@ installer_archives:
 ====
 
 
+[[google-cloud-netapp-volumes-configuration-for-oracle-database-storage]]
 === Configurazione di Google Cloud NetApp Volumes per lo storage del database Oracle
 
 [%collapsible]
@@ -186,6 +196,7 @@ NOTE: Non attivare il backup pianificato in Google Cloud NetApp Volumes in quest
 ====
 
 
+[[automated-oracle-deployment-with-ansible-playbook]]
 === Distribuzione automatizzata di Oracle con Ansible playbook
 
 
@@ -675,6 +686,7 @@ Jan 28 16:59:10 orap systemd[1]: Started Oracle Database Start/Stop Service.
 ====
 
 
+[[oracle-database-backup-with-google-cloud-netapp-volumes]]
 === Backup del database Oracle con Google Cloud NetApp Volumes
 
 
@@ -1349,6 +1361,7 @@ NOTE: Se esiste già un backup del vault da uno Snapshot, un secondo tentativo d
 ====
 
 
+[[oracle-database-recovery-and-clone-with-google-cloud-netapp-volumes]]
 === Ripristino e clonazione del database Oracle con Google Cloud NetApp Volumes
 
 
@@ -1809,6 +1822,7 @@ Per alcuni clienti che necessitano di clonazione e aggiornamento automatizzati, 
 ====
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:

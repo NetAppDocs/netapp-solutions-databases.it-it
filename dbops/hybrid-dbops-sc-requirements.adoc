@@ -22,6 +22,7 @@ Supponiamo che i server di database di produzione siano ospitati in locale con v
 
 
 
+[[requirements]]
 == Requisiti
 
 [cols="3, 9"]

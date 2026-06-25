@@ -20,6 +20,7 @@ Questa soluzione fornisce un utile toolkit per dimensionare l'elaborazione e l'a
 
 
 
+[[purpose]]
 == Scopo
 
 Per spostare un carico di lavoro Oracle esistente da una piattaforma all'altra, ad esempio da locale a cloud pubblico, è necessario dimensionare le risorse di elaborazione e archiviazione nella piattaforma di destinazione per soddisfare i requisiti di prestazioni e livello di servizio.  Questa documentazione illustra un semplice toolkit per raggiungere tale obiettivo.
@@ -34,6 +35,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -45,6 +47,7 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[license]]
 == Licenza
 
 Accedendo, scaricando, installando o utilizzando il contenuto di questo repository di toolkit, accetti i termini della licenza stabiliti inlink:https://netapp.sharepoint.com/sites/CIEBuilt-OnsTeam-DatabasesandApps/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FCIEBuilt%2DOnsTeam%2DDatabasesandApps%2FShared%20Documents%2FDatabases%20and%20Apps%2FDatabase%20Solutions%2FDB%20Sizing%20Toolkits%2FOracle%20Sizing%20Guidance%20for%20ANF%2FLICENSE%2ETXT&parent=%2Fsites%2FCIEBuilt%2DOnsTeam%2DDatabasesandApps%2FShared%20Documents%2FDatabases%20and%20Apps%2FDatabase%20Solutions%2FDB%20Sizing%20Toolkits%2FOracle%20Sizing%20Guidance%20for%20ANF["File di licenza"^] .
@@ -54,10 +57,12 @@ NOTE: Esistono alcune restrizioni relative alla produzione e/o alla condivisione
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible%open]
@@ -71,6 +76,7 @@ Per la distribuzione sono richiesti i seguenti prerequisiti.
 ====
 
 
+[[download-the-toolkit]]
 === Scarica il toolkit
 
 [%collapsible%open]
@@ -80,6 +86,7 @@ Recupera il toolkit dal repositorylink:https://netapp.sharepoint.com/sites/CIEBu
 ====
 
 
+[[how-to-use-the-toolkit]]
 === Come utilizzare il toolkit?
 
 [%collapsible%open]
@@ -95,6 +102,7 @@ Il toolkit è costituito da un parser HTML basato sul Web e da due script SQL pe
 ====
 
 
+[[toolkit-usage-demonstration]]
 === Dimostrazione dell'utilizzo del toolkit
 
 [%collapsible%open]

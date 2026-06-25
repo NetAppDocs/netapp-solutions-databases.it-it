@@ -15,6 +15,8 @@ Installa Oracle Grid Infrastructure con Oracle Restart e ASM su storage iSCSI Go
 
 
 
+[[step-1-install-grid-infrastructure-on-each-db-host]]
+[[install-grid-infrastructure]]
 == Passaggio 1: Installa Grid Infrastructure su ogni host DB
 
 Installa Oracle Grid Infrastructure GoldImage su ogni database host per abilitare Oracle Restart e ASM. Entrambi gli host richiedono la propria Grid home, istanza ASM e gruppi di dischi; Data Guard replica i dati tramite Oracle Net, non tramite storage condiviso. Completa tutti i passaggi su  `oracdb1` prima di ripeterli su  `oracdb2`.
@@ -136,6 +138,8 @@ Utilizza gli stessi nomi dei gruppi di dischi ASM: Data Guard replica tramite Or
 
 
 
+[[step-2-install-oracle-database-on-each-db-host]]
+[[install-oracle-db-home]]
 == Passaggio 2: Installa il database Oracle su ogni host DB
 
 Installa la home del software Oracle Database 26ai su ogni host del database usando un'installazione silenziosa, solo software, con l'ultimo Release Update applicato. Completa tutti i passaggi su  `oracdb1` prima di ripetere su  `oracdb2`.
@@ -204,6 +208,7 @@ Il database standby viene creato in xref:gcnv-oracle-standby-database.adoc[Crear
 
 
 
+[[whats-next]]
 == E ora?
 
 Per creare l'istanza primaria di produzione per la tua distribuzione HA, vai a xref:gcnv-oracle-primary-database.adoc[Crea il database Oracle primario] su  `oracdb1`.

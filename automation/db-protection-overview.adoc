@@ -18,6 +18,7 @@ Questa pagina descrive il metodo automatizzato per distribuire Oracle19c sullo s
 
 
 
+[[automated-data-protection-for-oracle-databases]]
 == Protezione automatizzata dei dati per i database Oracle
 
 Le organizzazioni stanno automatizzando i propri ambienti per aumentare l'efficienza, accelerare le distribuzioni e ridurre lo sforzo manuale.  Strumenti di gestione della configurazione come Ansible vengono utilizzati per semplificare le operazioni dei database aziendali.  In questa soluzione, dimostriamo come utilizzare Ansible per automatizzare la protezione dei dati di Oracle con NetApp ONTAP.  Consentendo agli amministratori di storage, agli amministratori di sistema e agli amministratori di database di configurare in modo rapido e coerente la replica dei dati su un data center esterno o su un cloud pubblico, si ottengono i seguenti vantaggi:
@@ -32,6 +33,7 @@ NetApp fornisce ai clienti moduli e ruoli Ansible convalidati per accelerare la 
 
 
 
+[[on-prem-to-on-prem-replication]]
 === Replica da locale a locale
 
 * Crea intercluster lifs su origine e destinazione
@@ -43,6 +45,7 @@ NetApp fornisce ai clienti moduli e ruoli Ansible convalidati per accelerare la 
 
 
 
+[[on-prem-to-cvo-in-aws]]
 === Da On Prem a CVO in AWS
 
 * Crea connettore AWS

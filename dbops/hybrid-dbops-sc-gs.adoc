@@ -18,6 +18,7 @@ Questa sezione fornisce un riepilogo delle attività che devono essere completat
 
 
 
+[[on-premises]]
 == In sede
 
 * Imposta l'utente amministratore del database in SnapCenter
@@ -33,6 +34,7 @@ Questa sezione fornisce un riepilogo delle attività che devono essere completat
 
 
 
+[[aws-public-cloud]]
 == Cloud pubblico AWS
 
 * Controllo pre-volo

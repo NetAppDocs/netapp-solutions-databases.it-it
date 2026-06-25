@@ -24,6 +24,7 @@ La maggior parte delle organizzazioni IT segue un approccio cloud-first.  I clie
 
 
 
+[[use-case]]
 == Caso d'uso
 
 Lo spostamento dell'infrastruttura SQL Server su Azure e l'integrazione di SQL Server con la vasta gamma di funzionalità PaaS (Platform-as-a-Service) di Azure, come Azure Data Factory, Azure IoT Hub e Azure Machine Learning, creano un enorme valore aziendale a supporto della trasformazione digitale.  L'adozione del cloud consente inoltre alla rispettiva unità aziendale di concentrarsi sulla produttività e di fornire nuove funzionalità e miglioramenti più rapidamente (caso d'uso DevTest) rispetto al modello CAPEX o ai tradizionali modelli di cloud privato.  Questo documento illustra la distribuzione in tempo reale del gruppo di disponibilità Always On (AOAG) di SQL Server su Azure NetApp Files sfruttando le macchine virtuali di Azure.

@@ -20,6 +20,7 @@ Questa soluzione fornisce una panoramica e dettagli per la distribuzione automat
 
 
 
+[[purpose]]
 == Scopo
 
 Eseguire carichi di lavoro Oracle ad alte prestazioni e sensibili alla latenza nel cloud può essere impegnativo.  Azure NetApp Files (ANF) semplifica la migrazione e l'esecuzione di carichi di lavoro Oracle impegnativi per i professionisti delle linee di business (LOB) e dell'archiviazione, senza dover modificare il codice.  Azure NetApp Files è ampiamente utilizzato come servizio di archiviazione file condiviso sottostante in vari scenari, ad esempio nuove distribuzioni o migrazioni (lift and shift) di database Oracle da locali ad Azure.
@@ -34,6 +35,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -46,18 +48,21 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente di test e convalida della soluzione
 
 I test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio che potrebbe non corrispondere all'ambiente di distribuzione finale.  Vedi la sezione<<Fattori chiave per la considerazione dell'implementazione>> per maggiori informazioni.
 
 
 
+[[architecture]]
 === Architettura
 
 image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadro dettagliato della configurazione di distribuzione di Oracle nel cloud pubblico AWS con iSCSI e ASM."]
 
 
 
+[[hardware-and-software-components]]
 === Componenti hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -104,6 +109,7 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 |===
 
 
+[[oracle-database-configuration-in-the-lab-environment]]
 === Configurazione del database Oracle nell'ambiente di laboratorio
 
 [cols="33%, 33%, 33%"]
@@ -123,6 +129,7 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fattori chiave per la considerazione dell'implementazione
 
 * *Layout di archiviazione del database Oracle.*  In questa distribuzione Oracle automatizzata, per impostazione predefinita forniamo tre volumi di database per ogni database per ospitare file binari, dati e log di Oracle.  I volumi vengono montati sul server Oracle DB come /u01 - binario, /u02 - dati, /u03 - log tramite NFS.  Per ridondanza, i file di controllo doppi sono configurati sui punti di montaggio /u02 e /u03.
@@ -134,12 +141,14 @@ image:automation-ora-anf-nfs-architecture.png["Questa immagine fornisce un quadr
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 Le sezioni seguenti forniscono procedure dettagliate per la distribuzione automatizzata di Oracle 19c e la migrazione del database su Azure NetApp Files con volumi di database montati direttamente tramite NFS su VM di Azure.
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible%open]
@@ -198,6 +207,7 @@ video::d1c859b6-e45a-44c7-8361-b10f012fc89b[panopto,width=360]
 ====
 
 
+[[automation-parameter-files]]
 === File dei parametri di automazione
 
 [%collapsible%open]
@@ -214,6 +224,7 @@ Oltre a questi file di variabili definiti dall'utente, esistono diversi file di 
 ====
 
 
+[[parameter-files-configuration]]
 === Configurazione dei file dei parametri
 
 [%collapsible%open]
@@ -292,6 +303,7 @@ nfs_lif: 172.30.136.68
 ====
 
 
+[[playbook-execution]]
 === Esecuzione del playbook
 
 [%collapsible%open]
@@ -356,6 +368,7 @@ ansible-playbook -i hosts 5-destroy.yml -u azureuser -e @vars/vars.yml
 ====
 
 
+[[post-execution-validation]]
 === Convalida post-esecuzione
 
 [%collapsible%open]
@@ -593,6 +606,7 @@ image:automation-ora-anf-nfs-em-001.png["Questa immagine fornisce la schermata d
 ====
 
 
+[[migrate-oracle-database-to-azure]]
 === Migrare il database Oracle su Azure
 
 [%collapsible%open]
@@ -602,6 +616,7 @@ La migrazione del database Oracle da locale al cloud è un'operazione molto impe
 ====
 
 
+[[oracle-backup-restore-and-clone-with-snapcenter]]
 === Backup, ripristino e clonazione di Oracle con SnapCenter
 
 [%collapsible%open]
@@ -611,6 +626,7 @@ NetApp consiglia lo strumento SnapCenter UI per gestire il database Oracle distr
 ====
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:

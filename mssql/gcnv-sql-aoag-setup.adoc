@@ -15,6 +15,7 @@ Configura i gruppi di disponibilità Always On di SQL Server su istanze di Googl
 
 
 
+[[prerequisites]]
 == Prerequisiti
 
 Prima di procedere, completa i passaggi prerequisiti di configurazione nella documentazione di Google Cloud:
@@ -27,6 +28,7 @@ Prima di procedere, completa i passaggi prerequisiti di configurazione nella doc
 
 
 
+[[before-you-begin]]
 == Prima di iniziare
 
 Assicurati di aver completato i seguenti requisiti:
@@ -43,6 +45,7 @@ NOTE: I nuovi utenti di Google Cloud potrebbero essere idonei per link:https://c
 
 
 
+[[objectives]]
 == Obiettivi
 
 La configurazione del gruppo di disponibilità Always On di SQL Server include le seguenti attività high-level:
@@ -57,6 +60,7 @@ La configurazione del gruppo di disponibilità Always On di SQL Server include l
 
 
 
+[[cost-considerations]]
 == Considerazioni sui costi
 
 Questo tutorial utilizza componenti fatturabili di Google Cloud, inclusi link:https://console.cloud.google.com/compute/overview?["Istanze Compute Engine"^] e link:https://console.cloud.google.com/netapp/volumes?["Google Cloud NetApp Volumes"^] storage.
@@ -65,6 +69,7 @@ Utilizza il link:https://cloud.google.com/products/calculator?dl=CjhDaVF4T1dJeU5
 
 
 
+[[configure-domain-accounts]]
 == Configura gli account di dominio
 
 Configura due account in Active Directory: un account di installazione (il tuo account admin) e un account di servizio per entrambe le VM di SQL Server.
@@ -86,6 +91,7 @@ NOTE: Questo esempio utilizza `cvsdemo` come domain name. Sostituisci `cvsdemo` 
 |===
 
 
+[[create-compute-engine-vms-for-sql-server]]
 == Crea VM Compute Engine per SQL Server
 
 Crea due istanze VM di Google Compute Engine con SQL Server 2022 Enterprise preinstallato su Windows Server 2025 per ospitare le repliche del gruppo di disponibilità.
@@ -125,6 +131,7 @@ Fare riferimento a link:https://cloud.google.com/compute/docs/instances/create-s
 
 
 
+[[join-servers-to-the-domain]]
 === Unisci i server al domain name
 
 Dopo aver creato le VM, uniscile al dominio Active Directory e installa le funzionalità Windows richieste per il clustering di failover e la connettività iSCSI.
@@ -147,6 +154,7 @@ NOTE: L'istanza SQL verrà eseguita utilizzando l'account sqlsvc, che è necessa
 
 
 
+[[install-required-windows-features]]
 === Installa le funzionalità di Windows richieste
 
 Installa Failover Clustering e MPIO su entrambe le VM di SQL Server utilizzando Server Manager o PowerShell.
@@ -178,6 +186,7 @@ Install-WindowsFeature RSAT-AD-PowerShell
 ----
 
 
+[[obtain-iscsi-initiator-names]]
 === Ottenere i nomi degli iSCSI initiator
 
 Ottieni il nome qualificato iSCSI (IQN) per ogni VM di SQL Server da includere nel gruppo host utilizzando l'interfaccia utente grafica dell'iSCSI Initiator o PowerShell.
@@ -200,12 +209,14 @@ Get-InitiatorPort | Select-Object NodeAddress
 ----
 
 
+[[create-netapp-block-storage-volumes]]
 == Crea volumi di storage a blocchi NetApp
 
 Crea volumi di storage a blocchi iSCSI utilizzando Google Cloud NetApp Volumes per fornire storage condiviso dalle performance elevate per i database SQL Server. Questo processo include la creazione di un gruppo host, di un pool di storage e di volumi individuali per dati, log, temp e backup.
 
 
 
+[[create-the-host-group]]
 === Crea il gruppo host
 
 .Passaggi
@@ -242,6 +253,7 @@ image::gcnv-sql-storage-pool.png[Configurazione del pool di storage]
 
 
 
+[[create-storage-pool]]
 === Crea pool di storage
 
 .Passaggi
@@ -279,6 +291,7 @@ Per maggiori dettagli, fare riferimento alla link:https://cloud.google.com/netap
 
 
 
+[[create-volumes]]
 === Crea volumi
 
 . Crea volumi per dati, log, temp e backup. Esegui il seguente comando per ogni tipo di volume:
@@ -317,6 +330,7 @@ NOTE: Ripetere questo passaggio per ciascun tipo di volume: data, log, temp e ba
 
 
 
+[[mount-iscsi-volumes]]
 === Montare i volumi iSCSI
 
 Monta i volumi iSCSI non condivisi su ogni istanza SQL:
@@ -371,6 +385,7 @@ $paths | % { New-Item -ItemType Directory -Path $_ -Force }
 
 
 
+[[configure-sql-server]]
 == Configura SQL Server
 
 Configurare SQL Server su entrambi i nodi per utilizzare l'account del servizio di dominio, aggiornare i percorsi predefiniti per utilizzare i volumi NetApp e spostare i database di sistema nelle nuove posizioni di storage.
@@ -545,12 +560,14 @@ image::gcnv-sql-aoag-003.png[SQL Server Configuration Manager - Parametri di avv
 
 
 
+[[set-up-failover-cluster]]
 == Configurare il cluster di failover
 
 Configura Windows Server Failover Clustering per garantire un'elevata disponibilità per SQL Server. Per maggiori dettagli, consulta link:https://learn.microsoft.com/en-us/windows-server/failover-clustering/failover-clustering-overview["Documentazione di Windows Server Failover Clustering"^].
 
 
 
+[[configure-firewall-rules]]
 === Configura le regole del firewall
 
 Aprire le porte di rete necessarie su entrambi i nodi SQL per abilitare la comunicazione del cluster, la connettività di SQL Server e la replica del gruppo di disponibilità.
@@ -588,6 +605,7 @@ Get-NetAdapterBinding -ComponentID ms_tcpip6
 
 
 
+[[create-the-failover-cluster]]
 === Creare il failover cluster
 
 Crea un Windows Server Failover Cluster con entrambi i nodi di SQL Server per abilitare l'elevata disponibilità e le funzionalità di failover automatico.
@@ -609,12 +627,14 @@ image::gcnv-sql-failover-confirm.png[Creazione del failover cluster]
 
 
 
+[[configure-cluster-quorum-with-file-share-witness]]
 == Configurare il quorum del cluster con il testimone della condivisione file
 
 Configura un file share witness per mantenere il quorum in una configurazione di cluster a due nodi. Il witness fornisce un voto aggiuntivo per prevenire scenari di split-brain e garantire la disponibilità del cluster.
 
 
 
+[[create-file-share]]
 === Crea file share
 
 Crea una condivisione file su una VM in una zona o regione diversa che abbia connettività di rete e si trovi nello stesso dominio Active Directory.
@@ -641,6 +661,7 @@ Assicurarsi che l'account utilizzato per creare il cluster (sqlcluwest1$) abbia 
 
 
 
+[[configure-quorum-settings]]
 === Configura le impostazioni del quorum
 
 Configura il cluster per utilizzare il file share witness per la votazione del quorum.
@@ -665,6 +686,7 @@ image::gcnv-sql-file-share-confirm.png[Quorum del cluster configurato con file s
 
 
 
+[[enable-always-on-availability-groups]]
 == Abilita Always On availability groups
 
 Abilita i gruppi di disponibilità Always On su entrambe le VM di SQL Server:
@@ -684,6 +706,7 @@ image::gcnv-sql-always-on-group.png[Abilita Always On High Availability]
 
 
 
+[[create-a-database-on-the-first-sql-server-instance]]
 == Crea un database sulla prima istanza di SQL Server
 
 Crea un database sulla prima istanza di SQL Server.
@@ -704,6 +727,7 @@ GO
 
 
 
+[[create-and-configure-availability-group]]
 == Creare e configurare availability group
 
 Crea un gruppo di disponibilità Always On con commit sincrono e failover automatico per garantire un'elevata disponibilità per i tuoi database SQL Server.
@@ -779,6 +803,7 @@ image::gcnv-sql-avail-group-replica.png[Gruppo di disponibilità creato corretta
 
 
 
+[[create-dnn-listener-resource]]
 == Crea risorsa listener DNN
 
 Crea un listener Distributed Network Name (DNN) per instradare il traffico verso la risorsa cluster appropriata senza richiedere un load balancer.
@@ -807,6 +832,7 @@ Set-ClusterResourceDependency -Resource $AagResource -Dependency "[$Dns]"
 ----
 
 
+[[configure-possible-owners]]
 === Configura i possibili proprietari
 
 Per impostazione predefinita, il cluster associa il nome DNS DNN a tutti i nodi. Escludere i nodi che non partecipano al gruppo di disponibilità:
@@ -826,6 +852,7 @@ image::gcnv-sql-configure-dns.png[Configura i possibili proprietari DNN]
 
 
 
+[[update-application-connection-strings]]
 == Aggiorna le stringhe di connessione dell'applicazione
 
 Aggiorna le stringhe di connessione per utilizzare il nome del listener DNN e includere il parametro  `MultiSubnetFailover=True`:
@@ -840,6 +867,7 @@ NOTE: Se il tuo client non supporta il parametro MultiSubnetFailover, non è com
 
 
 
+[[test-failover]]
 == Test failover
 
 Verificare la configurazione del gruppo di disponibilità e testare il failover per garantire che il failover automatico funzioni correttamente tra i nodi.
@@ -890,6 +918,7 @@ image::gcnv-sql-success-failover.png[Dashboard Always On High Availability che m
 
 
 
+[[clean-up-resources]]
 == Elimina le risorse
 
 Dopo aver completato il tutorial, elimina le risorse che hai creato per evitare di incorrere in costi aggiuntivi:
@@ -904,6 +933,7 @@ Fare riferimento a link:https://cloud.google.com/netapp/volumes/docs/configure-a
 
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per ulteriori informazioni su SQL Server su Google Cloud con NetApp storage, consultare la seguente documentazione:

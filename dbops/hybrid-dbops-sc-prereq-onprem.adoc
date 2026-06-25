@@ -18,6 +18,7 @@ Per preparare l'ambiente di carico di lavoro del database cloud ibrido SnapCente
 
 
 
+[[snapcenter-installation-and-configuration]]
 == Installazione e configurazione SnapCenter
 
 Lo strumento NetApp SnapCenter è un'applicazione basata su Windows che in genere viene eseguita in un ambiente di dominio Windows, sebbene sia possibile anche la distribuzione in gruppi di lavoro.  Si basa su un'architettura multilivello che include un server di gestione centralizzato (il server SnapCenter ) e un plug-in SnapCenter sugli host del server del database per i carichi di lavoro del database.  Ecco alcune considerazioni chiave per l'implementazione del cloud ibrido.
@@ -34,6 +35,7 @@ Dopo un'attenta pianificazione e valutazione pre-installazione, fare clic quilin
 
 
 
+[[on-premises-database-server-storage-configuration]]
 == Configurazione dell'archiviazione del server di database locale
 
 Le prestazioni di archiviazione svolgono un ruolo importante nelle prestazioni complessive di database e applicazioni.  Un layout di archiviazione ben progettato può non solo migliorare le prestazioni del database, ma anche semplificare la gestione del backup e del ripristino del database.  Quando si definisce il layout di archiviazione, è necessario considerare diversi fattori, tra cui le dimensioni del database, la frequenza di modifica prevista dei dati per il database e la frequenza con cui si eseguono i backup.
@@ -65,6 +67,7 @@ Per facilitare lo spostamento dei database Oracle, il binario Oracle deve essere
 
 
 
+[[licensing-requirements]]
 == Requisiti di licenza
 
 SnapCenter è un software concesso in licenza da NetApp.  In genere è incluso in una licenza ONTAP locale.  Tuttavia, per la distribuzione cloud ibrida, è necessaria anche una licenza cloud per SnapCenter per aggiungere CVO a SnapCenter come destinazione di replicazione dei dati.  Per maggiori dettagli, consultare i seguenti link per la licenza basata sulla capacità standard SnapCenter :
@@ -73,6 +76,7 @@ link:https://docs.netapp.com/us-en/snapcenter/install/concept_snapcenter_standar
 
 
 
+[[networking-and-security]]
 == Rete e sicurezza
 
 In un'operazione di database ibrido che richiede un database di produzione locale con supporto burst nel cloud per sviluppo/test e ripristino di emergenza, la rete e la sicurezza sono fattori importanti da considerare quando si configura l'ambiente e ci si connette al cloud pubblico da un data center locale.
@@ -90,6 +94,7 @@ Per considerazioni relative alla rete e alla sicurezza, rivedi le regole CVO in 
 
 
 
+[[using-ansible-automation-to-sync-db-instances-between-on-premises-and-the-cloud-optional]]
 == Utilizzo dell'automazione Ansible per sincronizzare le istanze DB tra locale e cloud (facoltativo)
 
 Per semplificare la gestione di un ambiente di database cloud ibrido, NetApp consiglia vivamente, ma non richiede, di distribuire un controller Ansible per automatizzare alcune attività di gestione, come mantenere sincronizzate le istanze di elaborazione in locale e nel cloud.  Ciò è particolarmente importante perché un'istanza di elaborazione non sincronizzata nel cloud potrebbe rendere il database recuperato nel cloud soggetto a errori a causa di pacchetti kernel mancanti e altri problemi.

@@ -18,6 +18,7 @@ L'agilità del cloud pubblico, il time-to-value e il risparmio sui costi sono tu
 
 
 
+[[clone-an-oracle-database-for-devtest-from-a-replicated-snapshot-backup]]
 == Clona un database Oracle per sviluppo/test da un backup snapshot replicato
 
 . Accedi a SnapCenter con un ID utente di gestione del database per Oracle.  Passare alla scheda Risorse, che mostra i database Oracle protetti da SnapCenter.
@@ -86,6 +87,7 @@ image:snapctr-ora-clone-015.png["Figura che mostra il dialogo di input/output o 
 
 
 
+[[clone-a-sql-database-for-devtest-from-a-replicated-snapshot-backup]]
 == Clona un database SQL per sviluppo/test da un backup Snapshot replicato
 
 . Accedi a SnapCenter con un ID utente di gestione del database per SQL Server.  Passare alla scheda Risorse, che mostra i database utente di SQL Server protetti da SnapCenter e un'istanza SQL di standby di destinazione nel cloud pubblico.
@@ -135,6 +137,7 @@ image:snapctr-sql-clone-010.png["Figura che mostra il dialogo di input/output o 
 
 
 
+[[post-clone-configuration]]
 == Configurazione post-clone
 
 . Un database di produzione Oracle in locale viene solitamente eseguito in modalità di archiviazione dei log.  Questa modalità non è necessaria per un database di sviluppo o di test.  Per disattivare la modalità di archiviazione dei log, accedere al database Oracle come sysdba, eseguire un comando di modifica della modalità di log e avviare il database per l'accesso.
@@ -144,6 +147,7 @@ image:snapctr-sql-clone-010.png["Figura che mostra il dialogo di input/output o 
 
 
 
+[[refresh-clone-database]]
 == Aggiorna il database clone
 
 . Eliminare i database clonati e ripulire l'ambiente del server DB cloud.  Quindi seguire le procedure precedenti per clonare un nuovo DB con dati aggiornati.  Per clonare un nuovo database bastano pochi minuti.
@@ -152,6 +156,7 @@ image:snapctr-sql-clone-010.png["Figura che mostra il dialogo di input/output o 
 
 
 
+[[where-to-go-for-help]]
 == Dove rivolgersi per chiedere aiuto?
 
 Se hai bisogno di aiuto con questa soluzione e casi d'uso, unisciti alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.

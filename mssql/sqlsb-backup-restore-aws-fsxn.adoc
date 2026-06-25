@@ -25,6 +25,7 @@ Questo documento illustra i passaggi necessari per eseguire il backup e il ripri
 
 
 
+[[snapcenter-configuration]]
 == Configurazione SnapCenter
 
 Per la configurazione SnapCenter e la protezione delle risorse di Microsoft SQL Server è necessario eseguire i seguenti passaggi.  Ciascuno dei passaggi seguenti è descritto in dettaglio nelle sezioni seguenti.
@@ -38,6 +39,7 @@ Per la configurazione SnapCenter e la protezione delle risorse di Microsoft SQL 
 
 
 
+[[snapcenter-newly-installed-user-interface]]
 == Interfaccia utente SnapCenter appena installata
 
 Configurare le credenziali per il backup di SQL Server e ripristinare l'utente con diritti di amministratore di sistema.
@@ -144,6 +146,7 @@ image:sqlsb-aws-015.png["Figura che mostra il dialogo di input/output o che rapp
 ====
 
 
+[[configure-a-backup-policy]]
 == Configurare una politica di backup
 
 Una policy di backup è un insieme di regole che stabiliscono come gestire, pianificare e conservare i backup.  Aiuta a definire il tipo e la frequenza del backup in base all'SLA della tua azienda.
@@ -196,6 +199,7 @@ image:sqlsb-aws-024.png["Figura che mostra il dialogo di input/output o che rapp
 ====
 
 
+[[configure-and-protect-mssql-server-database]]
 == Configurare e proteggere il database MSSQL Server
 
 . Impostare la data di inizio e la data di scadenza della policy di backup.
@@ -223,6 +227,7 @@ image:sqlsb-aws-029.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[snapcenter-backup-operations]]
 == Operazioni di backup SnapCenter
 
 Per creare backup di SQL Server su richiesta, completare i seguenti passaggi:
@@ -243,6 +248,7 @@ image:sqlsb-aws-032.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[monitor-backup-job]]
 == Monitora il processo di backup
 
 . Dalla scheda *Monitor*, fare clic sul lavoro e selezionare *Dettagli* sulla destra per visualizzare i lavori.
@@ -258,6 +264,7 @@ Una volta completato il backup, nella vista Topologia viene visualizzata una nuo
 
 
 
+[[backup-operation-for-multiple-databases]]
 == Operazione di backup per più database
 
 Per configurare un criterio di backup per più database SQL Server, creare criteri di gruppo di risorse completando i seguenti passaggi:
@@ -326,6 +333,7 @@ image:sqlsb-aws-047.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[configure-and-protect-multiple-sql-server-databases]]
 == Configurare e proteggere più database SQL Server
 
 . Fare clic sul segno (*+*) per configurare la data di inizio e la data di scadenza.
@@ -355,6 +363,7 @@ image:sqlsb-aws-053.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[trigger-on-demand-backup-for-multiple-sql-server-databases]]
 == Attiva il backup su richiesta per più database SQL Server
 
 . Dalla scheda *Risorsa*, seleziona Visualizza.  Dal menu a discesa, seleziona *Gruppo di risorse*.
@@ -378,6 +387,7 @@ image:sqlsb-aws-057.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[monitor-multiple-database-backup-jobs]]
 == Monitorare i processi di backup di più database
 
 Dalla barra di navigazione a sinistra, fare clic su *Monitoraggio*, selezionare il processo di backup e fare clic su *Dettagli* per visualizzare l'avanzamento del processo.
@@ -390,6 +400,7 @@ image:sqlsb-aws-059.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[transaction-log-backup-for-multiple-database-backup]]
 == Backup del registro delle transazioni per il backup di più database
 
 SnapCenter supporta i modelli di ripristino completo, con registrazione in blocco e semplice.  La modalità di ripristino semplice non supporta il backup del registro transazionale.
@@ -446,6 +457,7 @@ image:sqlsb-aws-069.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[configure-and-protect-multiple-mssql-server-databases]]
 == Configurare e proteggere più database MSSQL Server
 
 . Fare clic sul criterio di backup del registro delle transazioni appena creato.
@@ -477,6 +489,7 @@ image:sqlsb-aws-075.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[triggering-an-on-demand-transaction-log-backup-for-mutiple-sql-server-databases]]
 == Attivazione di un backup del registro delle transazioni su richiesta per più database SQL Server
 
 Per attivare un backup su richiesta del registro transazionale per più database SQL Server, completare i seguenti passaggi:
@@ -498,6 +511,7 @@ image:sqlsb-aws-078.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[monitoring]]
 == Monitoraggio
 
 Passare alla scheda *Monitoraggio* e monitorare l'avanzamento del processo di backup.
@@ -506,6 +520,7 @@ image:sqlsb-aws-079.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[restore-and-recovery]]
 == Ripristino e recupero
 
 Vedere i seguenti prerequisiti necessari per il ripristino di un database SQL Server in SnapCenter.
@@ -519,6 +534,7 @@ Vedere i seguenti prerequisiti necessari per il ripristino di un database SQL Se
 
 
 
+[[restoring-deleted-tables-on-a-sql-server-database-to-a-point-in-time]]
 == Ripristino di tabelle eliminate su un database SQL Server a un punto nel tempo
 
 Per ripristinare un database SQL Server a un punto nel tempo, completare i seguenti passaggi:
@@ -582,6 +598,7 @@ image:sqlsb-aws-090.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[monitoring-the-restore-progress]]
 == Monitoraggio dell'avanzamento del ripristino
 
 . Dalla scheda *Monitoraggio*, fare clic sui dettagli del processo di ripristino per visualizzarne l'avanzamento.
@@ -600,6 +617,7 @@ image:sqlsb-aws-093.png["Figura che mostra il dialogo di input/output o che rapp
 
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:

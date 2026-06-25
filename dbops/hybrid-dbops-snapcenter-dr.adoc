@@ -18,6 +18,7 @@ Le aziende hanno adottato il cloud pubblico come risorsa e destinazione valida p
 
 
 
+[[clone-an-on-premises-oracle-production-db-to-cloud-for-dr]]
 == Clona un database di produzione Oracle locale sul cloud per il DR
 
 . Per verificare che il ripristino del clone venga eseguito tramite l'ultimo registro disponibile, abbiamo creato una piccola tabella di prova e inserito una riga.  I dati di prova verrebbero recuperati dopo un ripristino completo dell'ultimo registro disponibile.
@@ -97,6 +98,7 @@ image:snapctr-ora-dr-016-a.png["Figura che mostra il dialogo di input/output o c
 
 
 
+[[post-dr-clone-validation-and-configuration-for-oracle]]
 == Convalida e configurazione del clone post-DR per Oracle
 
 . Convalida l'ultima transazione di prova che è stata svuotata, replicata e ripristinata nella posizione DR nel cloud.
@@ -117,6 +119,7 @@ NOTE: La suddivisione dei cloni può comportare un utilizzo temporaneo dello spa
 
 
 
+[[clone-an-on-premises-sql-production-db-to-cloud-for-dr]]
 == Clona un database di produzione SQL locale sul cloud per il ripristino di emergenza
 
 . Allo stesso modo, per convalidare che il ripristino del clone SQL fosse stato eseguito tramite l'ultimo log disponibile, abbiamo creato una piccola tabella di prova e inserito una riga.  I dati di prova verrebbero recuperati dopo un ripristino completo dell'ultimo registro disponibile.
@@ -162,6 +165,7 @@ image:snapctr-sql-dr-010.png["Figura che mostra il dialogo di input/output o che
 
 
 
+[[post-dr-clone-validation-and-configuration-for-sql]]
 == Convalida e configurazione del clone post-DR per SQL
 
 . Monitorare lo stato del processo di clonazione.
@@ -179,6 +183,7 @@ image:snapctr-sql-dr-012.png["Figura che mostra il dialogo di input/output o che
 
 
 
+[[where-to-go-for-help]]
 == Dove rivolgersi per chiedere aiuto?
 
 Se hai bisogno di aiuto con questa soluzione e casi d'uso, unisciti alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.

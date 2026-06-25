@@ -18,12 +18,14 @@ Questo documento descrive in dettaglio la distribuzione di Oracle 19c tramite l'
 
 
 
+[[cli-deployment-oracle-19c-database]]
 == Distribuzione CLI del database Oracle 19c
 
 Questa sezione illustra i passaggi necessari per preparare e distribuire il database Oracle19c con la CLI.  Assicurati di aver esaminato illink:getting-started-requirements.html["Sezione Introduzione e Requisiti"] e preparare l'ambiente di conseguenza.
 
 
 
+[[download-oracle19c-repo]]
 === Scarica il repository Oracle19c
 
 . Dal controller Ansible, esegui il seguente comando:
@@ -37,6 +39,7 @@ git clone https://github.com/NetApp-Automation/na_oracle19c_deploy.git
 
 
 
+[[edit-the-hosts-file]]
 === Modificare il file hosts
 
 Completare quanto segue prima della distribuzione:
@@ -72,6 +75,7 @@ NOTE: Il playbook viene eseguito allo stesso modo indipendentemente dal numero d
 
 
 
+[[edit-the-hostname-yml-file-under-hostvars]]
 === Modifica il file host_name.yml in host_vars
 
 Ogni host Oracle ha il suo file di variabili host identificato dal suo nome host che contiene variabili specifiche dell'host.  Puoi specificare qualsiasi nome per il tuo host.  Modifica e copia il `host_vars` dalla sezione Host VARS Config e incollalo nel tuo desiderato `host_name.yml` file.
@@ -81,6 +85,7 @@ NOTE: Gli elementi in blu devono essere modificati per adattarli all'ambiente.
 
 
 
+[[host-vars-config]]
 === Configurazione VARS host
 
 [source, shell]
@@ -119,6 +124,7 @@ host_datastores_nfs:
 ----
 
 
+[[edit-the-vars-yml-file]]
 === Modifica il file vars.yml
 
 IL `vars.yml` il file consolida tutte le variabili specifiche dell'ambiente (ONTAP, Linux o Oracle) per la distribuzione Oracle.
@@ -222,6 +228,7 @@ initial_pwd_all: "netapp123"
 ----
 
 
+[[run-the-playbook]]
 === Esegui il playbook
 
 Dopo aver completato i prerequisiti ambientali richiesti e aver copiato le variabili in `vars.yml` E `your_host.yml` , ora sei pronto per distribuire i playbook.
@@ -251,6 +258,7 @@ ansible-playbook -i hosts all_playbook.yml -u username -k -K -t oracle_config -e
 
 
 
+[[deploy-additional-database-on-same-oracle-host]]
 === Distribuisci database aggiuntivo sullo stesso host Oracle
 
 La parte Oracle del playbook crea un singolo database contenitore Oracle su un server Oracle per ogni esecuzione.  Per creare un database contenitore aggiuntivo sullo stesso server, completare i seguenti passaggi:
@@ -269,6 +277,7 @@ La parte Oracle del playbook crea un singolo database contenitore Oracle su un s
 
 
 
+[[validate-oracle-installation]]
 === Convalida l'installazione di Oracle
 
 . Accedi al server Oracle come utente Oracle ed esegui i seguenti comandi:
@@ -360,6 +369,7 @@ Ciò conferma che l'ascoltatore Oracle funziona correttamente.
 
 
 
+[[where-to-go-for-help]]
 === Dove rivolgersi per chiedere aiuto?
 
 Se hai bisogno di aiuto con il toolkit, unisciti a noilink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.

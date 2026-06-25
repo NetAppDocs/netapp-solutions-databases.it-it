@@ -22,6 +22,7 @@ Le sezioni seguenti forniscono dettagli sulla migrazione dei database Oracle loc
 
 
 
+[[converting-a-single-instance-non-cdb-to-a-pdb-in-a-multitenant-cdb]]
 == Conversione di una singola istanza non CDB in un PDB in un CDB multitenant
 
 Se si dispone ancora di un database Oracle a istanza singola, è necessario convertirlo in un database contenitore multitenant, indipendentemente dal fatto che si desideri migrarlo sul cloud o meno, perché Oracle smetterà presto di supportare i database a istanza singola.
@@ -116,6 +117,7 @@ Arrestare e riavviare il database del contenitore.  Il ncdb viene disattivato da
 
 
 
+[[migrate-on-premises-oracle-databases-to-azure-with-pdb-relocation]]
 == Migrazione di database Oracle locali su Azure con rilocazione PDB
 
 La rilocazione di Oracle PDB con l'opzione di massima disponibilità utilizza la tecnologia di clonazione a caldo del PDB, che consente la disponibilità del PDB sorgente mentre il PDB viene copiato sulla destinazione.  Al momento del passaggio, le connessioni utente vengono reindirizzate automaticamente al PDB di destinazione.  In questo modo, i tempi di inattività vengono ridotti al minimo, indipendentemente dalle dimensioni del PDB.  NetApp fornisce un toolkit basato su Ansible che automatizza la procedura di migrazione.
@@ -160,6 +162,7 @@ NOTE: Il controller Ansible può essere installato in locale o nel cloud di Azur
 
 
 
+[[additional-oracle-database-migration-options]]
 == Ulteriori opzioni di migrazione del database Oracle
 
 Per ulteriori opzioni di migrazione, consultare la documentazione Microsoft:link:https://learn.microsoft.com/en-us/azure/architecture/example-scenario/oracle-migrate/oracle-migration-overview["Processo decisionale per la migrazione del database Oracle"^] .

@@ -18,10 +18,12 @@ Questa pagina descrive il metodo automatizzato per distribuire Oracle19c sullo s
 
 
 
+[[awxtower-deployment-oracle-19c-database]]
 == Distribuzione AWX/Tower del database Oracle 19c
 
 
 
+[[1-create-the-inventory-group-hosts-and-credentials-for-your-environment]]
 === 1. Crea l'inventario, il gruppo, gli host e le credenziali per il tuo ambiente
 
 Questa sezione descrive la configurazione di inventario, gruppi, host e credenziali di accesso in AWX/Ansible Tower che preparano l'ambiente per l'utilizzo delle soluzioni automatizzate NetApp .
@@ -91,6 +93,7 @@ extra_vars:
 
 
 
+[[2-create-a-project]]
 === 2. Crea un progetto
 
 . Vai su Risorse → Progetti e fai clic su Aggiungi.
@@ -106,6 +109,7 @@ extra_vars:
 
 
 
+[[3-configure-oracle-hostvars]]
 === 3. Configurare Oracle host_vars
 
 Le variabili definite in questa sezione vengono applicate a ciascun singolo server e database Oracle.
@@ -118,6 +122,7 @@ NOTE: Gli elementi in blu devono essere modificati per adattarli all'ambiente.
 
 
 
+[[host-vars-config]]
 === Configurazione VARS host
 
 [source, shell]
@@ -164,6 +169,7 @@ host_datastores_nfs:
 
 
 
+[[4-configure-global-variables]]
 === 4. Configurare le variabili globali
 
 Le variabili definite in questa sezione si applicano a tutti gli host Oracle, ai database e al cluster ONTAP .
@@ -274,6 +280,7 @@ initial_pwd_all: "netapp123"
 
 
 
+[[5-configure-and-launch-the-job-template]]
 === 5. Configurare e avviare il modello di lavoro.
 
 . Crea il modello di lavoro.
@@ -321,6 +328,7 @@ NOTE: requirements_config garantisce che siano disponibili le librerie corrette 
 
 
 
+[[6-deploy-additional-database-on-same-oracle-host]]
 === 6. Distribuisci un database aggiuntivo sullo stesso host Oracle
 
 La parte Oracle del playbook crea un singolo database contenitore Oracle su un server Oracle per ogni esecuzione.  Per creare database contenitore aggiuntivi sullo stesso server, completare i seguenti passaggi.
@@ -424,6 +432,7 @@ Ciò conferma che l'ascoltatore Oracle funziona correttamente.
 
 
 
+[[where-to-go-for-help]]
 === Dove rivolgersi per chiedere aiuto?
 
 Se hai bisogno di aiuto con il toolkit, unisciti a noilink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.

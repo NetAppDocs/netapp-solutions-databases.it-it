@@ -20,6 +20,7 @@ Nelle sezioni seguenti vengono descritte le considerazioni chiave da tenere a me
 
 
 
+[[vm-performance]]
 == Prestazioni della VM
 
 Per ottenere prestazioni ottimali da un database relazionale in un cloud pubblico è importante selezionare la dimensione corretta della VM.  Per prestazioni migliori, NetApp consiglia di utilizzare un'istanza EC2 M5 Series per la distribuzione Oracle, ottimizzata per i carichi di lavoro del database.  Lo stesso tipo di istanza viene utilizzato anche per alimentare un'istanza RDS per Oracle da AWS.
@@ -30,6 +31,7 @@ Per ottenere prestazioni ottimali da un database relazionale in un cloud pubblic
 
 
 
+[[storage-layout-and-settings]]
 == Disposizione e impostazioni di archiviazione
 
 NetApp consiglia il seguente layout di archiviazione:
@@ -54,6 +56,7 @@ Rivedere illink:https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/performance.ht
 
 
 
+[[nfs-configuration]]
 == Configurazione NFS
 
 Linux, il sistema operativo più diffuso, include funzionalità NFS native.  Oracle offre il client NFS diretto (dNFS) integrato nativamente in Oracle.  Oracle supporta NFSv3 da oltre 20 anni. dNFS è supportato con NFSv3 in tutte le versioni di Oracle.  NFSv4 è supportato da tutti i sistemi operativi che seguono lo standard NFSv4. Il supporto dNFS per NFSv4 richiede Oracle 12.1.0.2 o versione successiva.  NFSv4.1 richiede il supporto di un sistema operativo specifico.  Consultare lo strumento NetApp Interoperability Matrix Tool (IMT) per conoscere i sistemi operativi supportati. Il supporto dNFS per NFSv4.1 richiede Oracle versione 19.3.0.0 o successiva.
@@ -82,6 +85,7 @@ NOTE: Prima di utilizzare dNFS, verificare che siano installate le patch descrit
 
 
 
+[[high-availability]]
 == Alta disponibilità
 
 Come indicato nell'architettura della soluzione, HA si basa sulla replica a livello di storage.  Pertanto, l'avvio e la disponibilità di Oracle dipendono dalla rapidità con cui l'elaborazione e l'archiviazione possono essere attivate e ripristinate.  Vedere i seguenti fattori chiave:

@@ -18,6 +18,7 @@ La soluzione fornisce una panoramica e dettagli per la configurazione di Oracle 
 
 
 
+[[purpose]]
 == Scopo
 
 Oracle Data Guard garantisce elevata disponibilità, protezione dei dati e ripristino di emergenza per i dati aziendali in una configurazione di replicazione del database primario e del database di standby.  Oracle Active Data Guard consente agli utenti di accedere ai database di standby mentre è attiva la replicazione dei dati dal database primario ai database di standby.  Data Guard è una funzionalità di Oracle Database Enterprise Edition.  Non richiede licenze separate.  D'altro canto, Active Data Guard è un'opzione di Oracle Database Enterprise Edition e pertanto richiede una licenza separata.  Nella configurazione di Active Data Guard, più database standby possono ricevere la replica dei dati da un database primario.  Tuttavia, ogni database di standby aggiuntivo richiede una licenza Active Data Guard e spazio di archiviazione aggiuntivo pari alle dimensioni del database primario.  I costi operativi aumentano rapidamente.
@@ -33,6 +34,7 @@ Questa soluzione affronta i seguenti casi d'uso:
 
 
 
+[[audience]]
 == Pubblico
 
 Questa soluzione è destinata alle seguenti persone:
@@ -45,18 +47,21 @@ Questa soluzione è destinata alle seguenti persone:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente di test e convalida della soluzione
 
 Il test e la convalida di questa soluzione sono stati eseguiti in un ambiente di laboratorio cloud di Azure che potrebbe non corrispondere all'effettivo ambiente di distribuzione dell'utente. Per ulteriori informazioni, consultare la sezione <<Fattori chiave per la considerazione dell'implementazione>> .
 
 
 
+[[architecture]]
 === Architettura
 
 image:azure-ora-anf-data-guard-architecture.png["Questa immagine fornisce un quadro dettagliato dell'implementazione di Oracle Data Guard nel cloud Azure su ANF."]
 
 
 
+[[hardware-and-software-components]]
 === Componenti hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -91,6 +96,7 @@ image:azure-ora-anf-data-guard-architecture.png["Questa immagine fornisce un qua
 |===
 
 
+[[oracle-data-guard-configuration-with-hypothetical-ny-to-la-dr-setup]]
 === Configurazione di Oracle Data Guard con ipotetica configurazione DR da NY a LA
 
 [cols="33%, 33%, 33%"]
@@ -110,6 +116,7 @@ image:azure-ora-anf-data-guard-architecture.png["Questa immagine fornisce un qua
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fattori chiave per la considerazione dell'implementazione
 
 * *Clone del database di standby.*  Durante la ricezione e l'applicazione dei registri delle transazioni dal database primario, il database di standby fisico può essere clonato e montato su una VM DB per supportare altri carichi di lavoro quali DEV, TEST o Report.  Il clone può essere sottile o spesso.  Al momento, ANF supporta solo il thick clone, ovvero una copia completa del database standby.  L'opzione clone sottile ANF sarà rilasciata a breve.  Per copie clonate in modo sottile di volumi di database, condivide gli stessi volumi di database del database di standby e utilizza la tecnologia copy-on-write per gestire gli I/O di scrittura.  Pertanto, i cloni sono molto efficienti in termini di archiviazione e possono essere utilizzati per molti altri casi d'uso con una nuova allocazione di archiviazione minima e incrementale per i nuovi I/O di scrittura.  Ciò consente un notevole risparmio sui costi di archiviazione riducendo sostanzialmente l'ingombro di Active Data Guard.  NetApp consiglia di ridurre al minimo le attività FlexClone in caso di passaggio del database dallo storage primario allo storage ANF di standby, per mantenere elevate le prestazioni di Oracle.
@@ -123,6 +130,7 @@ image:azure-ora-anf-data-guard-architecture.png["Questa immagine fornisce un qua
 
 
 
+[[solution-deployment]]
 == Distribuzione della soluzione
 
 Si presuppone che il database Oracle primario sia già distribuito in un ambiente cloud Azure all'interno di una rete virtuale come punto di partenza per la configurazione di Oracle Data Guard.  Idealmente, il database primario viene distribuito su un archivio ANF con montaggio NFS.  Vengono creati tre punti di montaggio NFS per l'archiviazione del database Oracle: mount /u01 per i file binari Oracle, mount /u02 per i file di dati Oracle e un file di controllo, mount /u03 per i file di registro Oracle correnti e archiviati e un file di controllo ridondante.
@@ -131,6 +139,7 @@ Il database Oracle primario può anche essere eseguito su un archivio NetApp ONT
 
 
 
+[[prerequisites-for-deployment]]
 === Prerequisiti per la distribuzione
 
 [%collapsible%open]
@@ -170,6 +179,7 @@ Verificare che i flussi di traffico siano stabiliti (cliccare sui tre punti per 
 ====
 
 
+[[prepare-the-primary-database-for-data-guard]]
 === Preparare il database primario per Data Guard
 
 [%collapsible%open]
@@ -480,6 +490,7 @@ Questa operazione completa la configurazione del database primario per Data Guar
 ====
 
 
+[[prepare-standby-database-and-activate-data-guard]]
 === Preparare il database di standby e attivare Data Guard
 
 [%collapsible%open]
@@ -842,6 +853,7 @@ In questo modo si completa la configurazione della protezione Data Guard per NTA
 ====
 
 
+[[setup-data-guard-broker]]
 === Configurazione di Data Guard Broker
 
 [%collapsible%open]
@@ -939,6 +951,7 @@ In caso di errore, Data Guard Broker può essere utilizzato per eseguire il fail
 ====
 
 
+[[clone-standby-database-for-other-use-cases]]
 === Clona il database di standby per altri casi d'uso
 
 [%collapsible%open]
@@ -1139,6 +1152,7 @@ Questo completa la dimostrazione del clone del database standby Oracle in Oracle
 ====
 
 
+[[where-to-find-additional-information]]
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sulle informazioni descritte nel presente documento, consultare i seguenti documenti e/o siti web:

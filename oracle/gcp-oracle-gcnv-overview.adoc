@@ -20,6 +20,7 @@ Questa soluzione consente alle organizzazioni di eseguire carichi di lavoro di O
 
 
 
+[[benfits-of-google-cloud-netapp-volumes]]
 == Vantaggi di Google Cloud NetApp Volumes
 
 Google Cloud NetApp Volumes offre i seguenti vantaggi:
@@ -52,6 +53,7 @@ La gestione dell'archiviazione diventa semplice grazie alla possibilità di aggi
 
 
 
+[[use-cases]]
 == Casi d'uso
 
 *Ambienti di produzione ad alte prestazioni:*
@@ -72,6 +74,7 @@ Le funzionalità di snapshot e clonazione della piattaforma supportano il provis
 
 
 
+[[architecture]]
 == Architettura
 
 È possibile eseguire database Oracle su Google Compute Engine con uno o più volumi di archiviazione.  Il numero di volumi dipende dal livello di separazione dei dati.  Ad esempio, i database più piccoli potrebbero essere posizionati su un singolo volume.  I database più grandi con requisiti di I/O o di gestione più esigenti potrebbero richiedere volumi individuali di file di dati, redo log e archive log.  È possibile aggiungere anche volumi aggiuntivi per dati applicativi o di backup.  Ogni volume può essere dimensionato correttamente in base alle esigenze dei dati da ospitare.
@@ -80,6 +83,7 @@ image:oracle-gcnv-001.png["Figura che mostra il dialogo di input/output o che ra
 
 
 
+[[preparing-the-google-cloud-netapp-volumes]]
 == Preparazione dei Google Cloud NetApp Volumes
 
 Crea un pool di archiviazione Google Cloud NetApp Volumes con la capacità e il livello di servizio desiderati.  Consultare la Guida introduttiva per configurare Google Cloud NetApp Volumes.  Se stai migrando database Oracle esistenti da locale a Google, puoi utilizzare Metrics Explorer per ottenere statistiche di throughput aggiornate, necessarie per dimensionare il pool e i volumi Google Cloud NetApp Volumes Storage.  Per informazioni dettagliate su come utilizzare il servizio, contatta il tuo specialista Oracle su Google.  La capacità effettiva disponibile per i volumi in un pool di archiviazione è definita dalle dimensioni e dal livello di servizio (Standard, Premium o Extreme, ecc.) del pool di archiviazione selezionato
@@ -100,6 +104,7 @@ La soluzione utilizza i seguenti componenti:
 
 
 
+[[key-benefits]]
 == Vantaggi principali
 
 Questa immagine (Figura 2) mostra i vantaggi dell'utilizzo di Google Cloud NetApp Volumes con Oracle Database.
@@ -154,6 +159,7 @@ Questo approccio completo al disaster recovery garantisce la continuità azienda
 
 
 
+[[considerations]]
 == Considerazioni
 
 Per questa soluzione valgono le seguenti considerazioni:
@@ -213,6 +219,7 @@ I vantaggi economici derivanti dall'utilizzo di VM più piccole includono:
 
 
 
+[[conclusion]]
 == Conclusione
 
 Questa combinazione di scalabilità flessibile, prestazioni ottimizzate e utilizzo efficiente delle risorse rende Google Cloud NetApp Volumes una scelta conveniente per le esigenze di storage aziendale.  La capacità di dimensionare correttamente sia le risorse di archiviazione che quelle di elaborazione consente alle organizzazioni di mantenere prestazioni elevate, controllando al contempo i costi in modo efficace.

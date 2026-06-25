@@ -18,10 +18,12 @@ Questa pagina descrive la protezione automatizzata dei dati di Oracle19c sullo s
 
 
 
+[[awxtower-oracle-data-protection]]
 == AWX/Tower Oracle Protezione dei dati
 
 
 
+[[create-the-inventory-group-hosts-and-credentials-for-your-environment]]
 === Crea l'inventario, il gruppo, gli host e le credenziali per il tuo ambiente
 
 Questa sezione descrive la configurazione di inventario, gruppi, host e credenziali di accesso in AWX/Ansible Tower che preparano l'ambiente per l'utilizzo delle soluzioni automatizzate NetApp .
@@ -217,6 +219,7 @@ extra_vars:
 ====
 
 
+[[create-a-project]]
 === Crea un progetto
 
 . Vai su Risorse → Progetti e fai clic su Aggiungi.
@@ -232,6 +235,7 @@ extra_vars:
 
 
 
+[[configure-global-variables]]
 === Configurare le variabili globali
 
 Le variabili definite in questa sezione si applicano a tutti gli host Oracle, ai database e al cluster ONTAP .
@@ -556,6 +560,7 @@ control_files:
 ====
 
 
+[[automation-playbooks]]
 === Manuali di automazione
 
 Ci sono quattro playbook distinti che devono essere eseguiti.
@@ -687,6 +692,7 @@ NOTE: Questo playbook non verrà eseguito finché non sarai pronto a ripristinar
 ====
 
 
+[[recovering-oracle-database]]
 === Recupero del database Oracle
 
 . I volumi di dati dei database Oracle di produzione on-premise sono protetti tramite la replica NetApp SnapMirror su un cluster ONTAP ridondante nel data center secondario o su Cloud Volume ONTAP nel cloud pubblico.  In un ambiente di disaster recovery completamente configurato, le istanze di elaborazione di ripristino nel data center secondario o nel cloud pubblico sono in standby e pronte a ripristinare il database di produzione in caso di disastro.  Le istanze di elaborazione in standby vengono mantenute sincronizzate con le istanze on-prem eseguendo aggiornamenti paralleli sulla patch del kernel del sistema operativo o aggiornandoli in modo graduale.

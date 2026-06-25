@@ -15,6 +15,7 @@ Verifica l'accesso a Google Cloud NetApp Volumes, l'abilitazione delle API, i pr
 
 
 
+[[access-and-apis]]
 == Accesso e API
 
 Utilizza questa checklist per verificare le autorizzazioni e la predisposizione della piattaforma prima di avviare il provisioning dello storage e dell'host.
@@ -53,6 +54,7 @@ timedatectl
 |===
 
 
+[[whats-next]]
 == E ora?
 
 Per predisporre l'infrastruttura host Oracle per l'alta disponibilità, continua con xref:gcnv-oracle-provision-compute.adoc[Effettua il provisioning delle istanze Google Compute Engine per Oracle Database 26ai].

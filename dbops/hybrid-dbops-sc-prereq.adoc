@@ -18,6 +18,7 @@ Prima di eseguire carichi di lavoro di database cloud ibridi, è necessario conf
 
 
 
+[[on-premises]]
 == In loco
 
 * Installazione e configurazione SnapCenter
@@ -29,6 +30,7 @@ Prima di eseguire carichi di lavoro di database cloud ibridi, è necessario conf
 
 
 
+[[public-cloud]]
 == Cloud pubblico
 
 * Un accesso a NetApp Cloud Central

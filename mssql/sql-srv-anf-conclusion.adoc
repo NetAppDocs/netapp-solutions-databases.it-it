@@ -20,6 +20,7 @@ Questo documento contiene raccomandazioni per la pianificazione, la progettazion
 
 
 
+[[takeaways]]
 == Da asporto
 
 I punti chiave di questo documento includono:

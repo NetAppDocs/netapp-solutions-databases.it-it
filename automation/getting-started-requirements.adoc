@@ -18,6 +18,7 @@ Questa soluzione è stata progettata per essere eseguita in un ambiente AWX/Towe
 
 
 
+[[awxtower]]
 == AWX/Torre
 
 Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario della gestione del cluster ONTAP e del server Oracle (IP e nomi host), nella creazione delle credenziali, nella configurazione di un progetto che estrae il codice Ansible da NetApp Automation Github e nel modello di lavoro che avvia l'automazione.
@@ -29,6 +30,7 @@ Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario dell
 
 
 
+[[cli-via-the-ansible-control-host]]
 == CLI tramite l'host di controllo Ansible
 
 . Per configurare l'host Linux in modo che possa essere utilizzato come host di controllo Ansiblelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["clicca qui per istruzioni dettagliate"^]
@@ -41,6 +43,7 @@ Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario dell
 
 
 
+[[requirements]]
 == Requisiti
 
 [cols="3, 9"]
@@ -82,6 +85,7 @@ Per gli ambienti AWX/Tower, verrai guidato nella creazione di un inventario dell
 |===
 
 
+[[automation-details]]
 == Dettagli di automazione
 
 Questa distribuzione automatizzata è progettata con un singolo playbook Ansible composto da tre ruoli separati.  I ruoli sono per le configurazioni ONTAP, Linux e Oracle.  La tabella seguente descrive quali attività vengono automatizzate.
@@ -158,12 +162,14 @@ Questa distribuzione automatizzata è progettata con un singolo playbook Ansible
 |===
 
 
+[[default-parameters]]
 == Parametri predefiniti
 
 Per semplificare l'automazione, abbiamo preimpostato molti parametri di distribuzione Oracle richiesti con valori predefiniti.  In genere, per la maggior parte delle distribuzioni non è necessario modificare i parametri predefiniti.  Un utente più esperto può apportare modifiche ai parametri predefiniti con cautela.  I parametri predefiniti si trovano in ogni cartella dei ruoli nella directory defaults.
 
 
 
+[[deployment-instructions]]
 == Istruzioni per la distribuzione
 
 Prima di iniziare, scaricare i seguenti file di installazione e patch di Oracle e inserirli nella cartella `/tmp/archive` directory con accesso in lettura, scrittura ed esecuzione per tutti gli utenti su ciascun server DB da distribuire.  Le attività di automazione cercano i file di installazione denominati in quella directory specifica per l'installazione e la configurazione di Oracle.
@@ -176,6 +182,7 @@ p6880880_190000_Linux-x86-64.zip -- opatch version 12.2.0.1.23
 ----
 
 
+[[license]]
 == Licenza
 
 Dovresti leggere le informazioni sulla licenza come indicato nel repository Github.  Accedendo, scaricando, installando o utilizzando il contenuto di questo repository, accetti i termini della licenza stabilitilink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["Qui"^] .

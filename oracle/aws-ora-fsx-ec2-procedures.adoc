@@ -18,12 +18,14 @@ In questa sezione vengono descritte le procedure di distribuzione del database p
 
 
 
+[[deploy-an-ec2-linux-instance-for-oracle-via-ec2-console]]
 == Distribuisci un'istanza EC2 Linux per Oracle tramite la console EC2
 
 Se sei un nuovo utente di AWS, devi prima configurare un ambiente AWS.  La scheda della documentazione nella landing page del sito Web AWS fornisce link alle istruzioni EC2 su come distribuire un'istanza EC2 Linux che può essere utilizzata per ospitare il database Oracle tramite la console AWS EC2.  La sezione seguente è un riepilogo di questi passaggi.  Per maggiori dettagli, consultare la documentazione specifica di AWS EC2.
 
 
 
+[[setting-up-your-aws-ec2-environment]]
 === Configurazione dell'ambiente AWS EC2
 
 È necessario creare un account AWS per fornire le risorse necessarie per eseguire l'ambiente Oracle sul servizio EC2 e FSx.  La seguente documentazione AWS fornisce i dettagli necessari:
@@ -40,6 +42,7 @@ Argomenti chiave:
 
 
 
+[[enabling-multiple-availability-zones-in-aws-account-attributes]]
 === Abilitazione di più zone di disponibilità negli attributi dell'account AWS
 
 Per una configurazione Oracle ad alta disponibilità, come illustrato nel diagramma dell'architettura, è necessario abilitare almeno quattro zone di disponibilità in una regione.  Le zone di disponibilità multipla possono anche essere situate in regioni diverse per soddisfare le distanze richieste per il ripristino in caso di disastro.
@@ -48,6 +51,7 @@ image:aws-ora-fsx-ec2-inst-001.png["Figura che mostra il dialogo di input/output
 
 
 
+[[creating-and-connecting-to-an-ec2-instance-for-hosting-oracle-database]]
 === Creazione e connessione a un'istanza EC2 per l'hosting del database Oracle
 
 Guarda il tutoriallink:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html["Inizia con le istanze Amazon EC2 Linux"^] per procedure di distribuzione dettagliate e best practice.
@@ -107,12 +111,14 @@ ssh -i ora-db1v2.pem ec2-user@54.80.114.77
 
 
 
+[[provision-fsx-ontap-file-systems-for-oracle-database-storage]]
 == Fornire file system FSx ONTAP per l'archiviazione del database Oracle
 
 La distribuzione dell'istanza EC2 alloca un volume root EBS per il sistema operativo.  I file system FSx ONTAP forniscono volumi di archiviazione del database Oracle, inclusi i volumi binari, di dati e di registro di Oracle.  Il provisioning dei volumi NFS di archiviazione FSx può essere effettuato dalla console AWS FSx o dall'installazione di Oracle e dall'automazione della configurazione che alloca i volumi in base alla configurazione effettuata dall'utente in un file di parametri di automazione.
 
 
 
+[[creating-fsx-ontap-file-systems]]
 === Creazione di file system FSx ONTAP
 
 Riferito a questa documentazione https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-file-systems.html["Gestione dei file system FSx ONTAP"^] per la creazione di file system FSx ONTAP .
@@ -168,6 +174,7 @@ image:aws-ora-fsx-ec2-stor-008.png["Figura che mostra il dialogo di input/output
 
 
 
+[[provisioning-of-database-volumes-for-oracle-database]]
 === Provisioning di volumi di database per il database Oracle
 
 Vederelink:https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html["Gestione dei volumi FSx ONTAP : creazione di un volume"^] per i dettagli.
@@ -193,18 +200,21 @@ NOTE: La creazione di LUN iSCSI non è attualmente supportata dalla console FSx.
 
 
 
+[[install-and-configure-oracle-on-an-ec2-instance-with-fsx-database-volumes]]
 == Installa e configura Oracle su un'istanza EC2 con volumi di database FSx
 
 Il team di automazione NetApp fornisce un kit di automazione per eseguire l'installazione e la configurazione di Oracle su istanze EC2 secondo le best practice.  La versione corrente del kit di automazione supporta Oracle 19c su NFS con la patch RU predefinita 19.8.  Se necessario, il kit di automazione può essere facilmente adattato ad altre patch RU.
 
 
 
+[[prepare-a-ansible-controller-to-run-automation]]
 === Preparare un controller Ansible per eseguire l'automazione
 
 Seguire le istruzioni nella sezione "<<Creazione e connessione a un'istanza EC2 per l'hosting del database Oracle>> " per predisporre una piccola istanza EC2 Linux per eseguire il controller Ansible.  Invece di usare RedHat, dovrebbe essere sufficiente Amazon Linux t2.large con 2 vCPU e 8 GB di RAM.
 
 
 
+[[retrieve-netapp-oracle-deployment-automation-toolkit]]
 === Recupera il toolkit di automazione della distribuzione NetApp Oracle
 
 Accedi all'istanza del controller EC2 Ansible fornita dal passaggio 1 come ec2-user e dalla directory home di ec2-user, esegui il comando `git clone` comando per clonare una copia del codice di automazione.
@@ -219,6 +229,7 @@ git clone https://github.com/NetApp-Automation/na_rds_fsx_oranfs_config.git
 ----
 
 
+[[execute-automated-oracle-19c-deployment-using-automation-toolkit]]
 === Eseguire la distribuzione automatizzata di Oracle 19c utilizzando il toolkit di automazione
 
 Vedi queste istruzioni dettagliatelink:../automation/cli-automation.html["Distribuzione CLI del database Oracle 19c"^] per distribuire Oracle 19c con automazione CLI.  C'è una piccola modifica nella sintassi dei comandi per l'esecuzione del playbook perché si utilizza una coppia di chiavi SSH anziché una password per l'autenticazione dell'accesso all'host.  L'elenco seguente è un riepilogo di alto livello:
@@ -262,6 +273,7 @@ Se necessario, modificare il bit di autorizzazione sul file chiave SSH su 400.  
 
 
 
+[[setting-up-snapmirror-between-primary-and-standby-fsx-ha-cluster]]
 == Impostazione di SnapMirror tra il cluster FSx HA primario e quello di standby
 
 Per un'elevata disponibilità e il ripristino di emergenza, è possibile impostare la replica SnapMirror tra il cluster di archiviazione FSx primario e quello di standby.  A differenza di altri servizi di archiviazione cloud, FSx consente all'utente di controllare e gestire la replicazione dell'archiviazione con la frequenza e la velocità di replica desiderate.  Consente inoltre agli utenti di testare HA/DR senza alcun effetto sulla disponibilità.
@@ -401,16 +413,19 @@ NOTE: La replica del binario Oracle dal cluster primario a uno standby potrebbe 
 
 
 
+[[snapcenter-deployment]]
 == Distribuzione di SnapCenter
 
 
 
+[[snapcenter-installation]]
 === Installazione SnapCenter
 
 Seguirelink:https://docs.netapp.com/ocsc-41/index.jsp?topic=%2Fcom.netapp.doc.ocsc-isg%2FGUID-D3F2FBA8-8EE7-4820-A445-BC1E5C0AF374.html["Installazione del server SnapCenter"^] per installare il server SnapCenter .  Questa documentazione spiega come installare un server SnapCenter autonomo.  Una versione SaaS di SnapCenter è in fase di revisione beta e potrebbe essere disponibile a breve.  Se necessario, verificare la disponibilità con il proprio rappresentante NetApp .
 
 
 
+[[configure-snapcenter-plugin-for-ec2-oracle-host]]
 === Configurare il plugin SnapCenter per l'host Oracle EC2
 
 . Dopo l'installazione automatica SnapCenter , accedi a SnapCenter come utente amministratore per l'host Windows su cui è installato il server SnapCenter .
@@ -474,6 +489,7 @@ image:aws-rds-custom-deploy-snp-008.png["Figura che mostra il dialogo di input/o
 
 
 
+[[configure-backup-policy-for-oracle-database]]
 === Configurare la policy di backup per il database Oracle
 
 Fare riferimento a questa sezionelink:../dbops/hybrid-dbops-sc-gs-onprem.html#7-setup-database-backup-policy-in-snapcenter["Imposta la policy di backup del database in SnapCenter"^] per i dettagli sulla configurazione della policy di backup del database Oracle.
@@ -485,6 +501,7 @@ NOTE: È possibile abilitare la potatura del log di archivio Oracle nella policy
 
 
 
+[[configure-oracle-database-backup-and-scheduling]]
 === Configurare il backup e la pianificazione del database Oracle
 
 Il backup del database in SnapCenter è configurabile dall'utente e può essere impostato individualmente o come gruppo in un gruppo di risorse.  L'intervallo di backup dipende dagli obiettivi RTO e RPO.  NetApp consiglia di eseguire un backup completo del database ogni poche ore e di archiviare il backup del registro con una frequenza maggiore, ad esempio ogni 10-15 minuti, per un ripristino rapido.

@@ -13,6 +13,7 @@ summary: 'Crea il database Oracle primario su Google Cloud NetApp Volumes storag
 [role="lead"]
 Crea il database Oracle primario su Google Cloud NetApp Volumes storage iSCSI usando Oracle Database Configuration Assistant in modalità silenziosa. Questa procedura copre l'esecuzione di  `dbca` per creare il container database e il pluggable database su gruppi di dischi ASM supportati da GCNV, configurare le destinazioni dei log di archivio e aggiungere un servizio dell'applicazione in base al ruolo per il failover trasparente dopo che Data Guard è stato abilitato.
 
+[[create-primary-database]]
 .Passaggi
 Crea il container database Oracle e il pluggable database su  `oracdb1` usando  `dbca` in modalità silenziosa, configura le destinazioni dei log di archivio, verifica la registrazione di Oracle Restart e aggiungi un servizio dell'applicazione in base al ruolo per il failover trasparente del client.
 
@@ -92,6 +93,7 @@ Dopo l'attivazione di Data Guard Broker,  `orclapp` viene eseguito solo sul PRIM
 
 
 
+[[whats-next]]
 == E ora?
 
 Per configurare la protezione in standby e la predisposizione al failover, vai su xref:gcnv-oracle-standby-database.adoc[Crea il database Oracle standby] su `oracdb2`.

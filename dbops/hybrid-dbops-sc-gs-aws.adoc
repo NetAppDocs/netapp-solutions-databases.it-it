@@ -18,6 +18,7 @@ Questa sezione descrive il processo di distribuzione di Cloud Manager e Cloud Vo
 
 
 
+[[aws-public-cloud]]
 == Cloud pubblico AWS
 
 
@@ -25,6 +26,7 @@ NOTE: Per semplificare la comprensione, abbiamo creato questo documento basandoc
 
 
 
+[[1-pre-flight-check]]
 === 1. Controllo pre-volo
 
 Prima della distribuzione, accertarsi che l'infrastruttura sia pronta per consentire la distribuzione nella fase successiva.  Ciò include quanto segue:
@@ -38,6 +40,7 @@ Prima della distribuzione, accertarsi che l'infrastruttura sia pronta per consen
 
 
 
+[[2-steps-to-deploy-cloud-manager-and-cloud-volumes-ontap-in-aws]]
 === 2. Passaggi per distribuire Cloud Manager e Cloud Volumes ONTAP in AWS
 
 
@@ -292,6 +295,7 @@ image:cloud-central-replication-013.png["Figura che mostra il dialogo di input/o
 
 
 
+[[3-deploy-ec2-compute-instance-for-database-workload]]
 === 3. Distribuisci l'istanza di elaborazione EC2 per il carico di lavoro del database
 
 AWS ha preconfigurato istanze di elaborazione EC2 per vari carichi di lavoro.  La scelta del tipo di istanza determina il numero di core della CPU, la capacità di memoria, il tipo e la capacità di archiviazione e le prestazioni della rete.  Per i casi d'uso, ad eccezione della partizione del sistema operativo, lo storage principale per eseguire il carico di lavoro del database viene allocato da CVO o dal motore di storage FSx ONTAP .  Pertanto, i fattori principali da considerare sono la scelta dei core della CPU, della memoria e del livello di prestazioni della rete.  I tipi tipici di istanze AWS EC2 sono disponibili qui: https://us-east-2.console.aws.amazon.com/ec2/v2/home?region=us-east-2#InstanceTypes:["Tipo di istanza EC2"] .
