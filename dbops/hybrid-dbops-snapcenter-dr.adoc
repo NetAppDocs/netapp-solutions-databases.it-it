@@ -186,4 +186,4 @@ image:snapctr-sql-dr-012.png["Figura che mostra il dialogo di input/output o che
 [[where-to-go-for-help]]
 == Dove rivolgersi per chiedere aiuto?
 
-Se hai bisogno di aiuto con questa soluzione e casi d'uso, unisciti alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.
+Se hai bisogno di aiuto con il toolkit, visita il link:https://community.netapp.com/["Community NetApp"^] e pubblica le tue domande.

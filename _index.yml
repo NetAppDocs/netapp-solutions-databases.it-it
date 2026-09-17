@@ -65,13 +65,13 @@ indexpage:
     - title: Migrazione del carico di lavoro SQL on-prem su FSx ONTAP
       url: "/mssql/customer-usecase-mssql-fsx1.html"
     - title: SAP con Microsoft SQL Server su Windows utilizzando Clustered Data ONTAP
-      url: https://www.netapp.com/pdf.html?item=/media/16865-tr-4467pdf.pdf
+      url: https://www.netapp.com/pdf.html?item=/media/16865-tr-4467.pdf
     - title: Modernizzare Microsoft SQL Server
       url: https://www.netapp.com/pdf.html?item=/media/15613-na-446.pdf
     - title: Procedure consigliate per Microsoft SQL Server con ONTAP
       url: https://www.netapp.com/pdf.html?item=/media/8585-tr4590.pdf
     - title: Procedure consigliate per Microsoft SQL Server con EF-Series
-      url: https://www.netapp.com/pdf.html?item=/media/17086-tr4764pdf.pdf
+      url: https://www.netapp.com/pdf.html?item=/media/17086-tr4764.pdf
   - title: Soluzioni di database cloud ibride
     links:
     - title: Distribuisci e proteggi Oracle RAC con vVols in VCF
@@ -85,7 +85,7 @@ indexpage:
     - title: Distribuisci Oracle19c su ONTAP con automazione
       url: "/automation/db-protection-overview.html"
     - title: Esegui database Oracle su NetApp EF-Series
-      url: https://www.netapp.com/pdf.html?item=/media/17248-tr4794pdf.pdf
+      url: https://www.netapp.com/pdf.html?item=/media/17248-tr4794.pdf
   - title: Database open source
     links:
     - title: Distribuisci il database PostgreSQL e configura il disaster recovery

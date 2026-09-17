@@ -93,7 +93,7 @@ Recupera il toolkit dal repositorylink:https://netapp.sharepoint.com/sites/CIEBu
 ====
 Il toolkit è costituito da un parser HTML basato sul Web e da due script SQL per raccogliere informazioni sul database Oracle.  L'output viene quindi inserito in un modello Excel per generare una guida al dimensionamento dell'elaborazione e dell'archiviazione per il server del database Oracle.
 
-* Utilizzare unlink:https://app.atroposs.com/#/awr-module["Analizzatore HTML"^] Modulo AWR per recuperare informazioni sulle dimensioni di un database Oracle corrente da un report AWR.
+* Usa un modulo AWR parser HTML per recuperare le informazioni sulle dimensioni di un database Oracle attuale da un report AWR.
 * Eseguire ora_db_data_szie.sql come DBA per recuperare le dimensioni fisiche del file di dati Oracle dal database.
 * Eseguire ora_db_logs_size.sql come DBA per recuperare le dimensioni dei log archiviati di Oracle con la finestra di conservazione dei log di archivio desiderata (giorni).
 * Inserire le informazioni sulle dimensioni ottenute sopra nel file modello Excel oracle_db_sizing_template_anf.xlsx per creare una guida alle dimensioni per l'elaborazione e l'archiviazione del server Oracle DB.
