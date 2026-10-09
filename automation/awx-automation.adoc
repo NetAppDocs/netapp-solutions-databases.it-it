@@ -429,10 +429,3 @@ CDB2_PDB1
 Ciò conferma che l'ascoltatore Oracle funziona correttamente.
 
 
-
-
-
-[[where-to-go-for-help]]
-=== Dove rivolgersi per chiedere aiuto?
-
-Se hai bisogno di aiuto con il toolkit, unisciti a noilink:https://netapppub.slack.com/archives/C021R4WC0LC["Canale Slack di supporto della community NetApp Solution Automation"] e cerca il canale solution-automation per pubblicare le tue domande o richieste.
