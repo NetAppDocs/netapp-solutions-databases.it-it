@@ -228,3 +228,10 @@ Per un database clone aggiuntivo, creare un file clone_n_setup.yml e un file clo
 == Dove trovare ulteriori informazioni
 
 Per saperne di più sull'automazione della soluzione NetApp , consultare il seguente sito Weblink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automazione delle soluzioni NetApp ^"^]
+
+
+
+[[github-repository-link]]
+== GitHub link del repository:
+
+Per informazioni dettagliate e per accedere al repository, visita: https://github.com/NetApp/na_oracle_clone_lifecycle["Automazione di Oracle Clone Lifecycle Repository"]

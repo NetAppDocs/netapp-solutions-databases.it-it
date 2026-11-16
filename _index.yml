@@ -62,6 +62,11 @@ indexpage:
       url: "/mssql/sql-srv-anf-overview.html"
     - title: Esegui SQL Server su Google Cloud NetApp Volumes
       url: "/mssql/gcnv-sql-aoag-setup.html"
+    - title: Scopri SQL Server 2025 su NetApp AFF con disponibilità continua SMB 3
+      url: "/mssql/sql-smb3-aff-overview.html"
+    - title: Distribuisci SQL Server 2025 su NetApp AFF utilizzando condivisioni SMB
+        3 a disponibilità continua
+      url: "/mssql/sql-smb3-aff.html"
     - title: Migrazione del carico di lavoro SQL on-prem su FSx ONTAP
       url: "/mssql/customer-usecase-mssql-fsx1.html"
     - title: SAP con Microsoft SQL Server su Windows utilizzando Clustered Data ONTAP
